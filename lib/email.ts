@@ -1,4 +1,4 @@
-import { GROUP_ORDER, type EmailVariant, type Payment, type PaymentGroup } from "./types"
+import { GROUP_LABELS, GROUP_ORDER, type EmailVariant, type Payment, type PaymentGroup } from "./types"
 import type { Meta } from "./store"
 
 const nf = new Intl.NumberFormat("en-US", {
@@ -24,8 +24,8 @@ const VARIANT_INTRO: Record<EmailVariant, string> = {
   danrn: "The following DA / NRN payments are uploaded in the bank for your kind approval.",
 }
 
-export const DISCLAIMER_EN =
-  "Disclaimer: Najm is subject to the supervision and oversight by Insurance Authority. The information in this email and in any files transmitted with it, is intended only for the addressee and may contain confidential and/or privileged material. Access to this email by anyone else is unauthorized. If you receive this in error, please contact the sender immediately and delete the material from any computer. If you are not the intended recipient, any disclosure, copying, distribution or any action taken or omitted to be taken in reliance on it, is strictly prohibited. Statement and opinions expressed in this e-mail are those of the sender, and do not necessarily reflect those of Najm for Insurance Services."
+export const NAJM_LOGO_URL =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picture2-jyEtLzhDE8zC6Xwa9lBKp6DlPg5DWA.png"
 
 /* ------------------------- HTML EMAIL ------------------------- */
 
@@ -37,14 +37,7 @@ const totalTd = `${cellBase}background:#eef3ee;font-weight:700;color:#1f2d24;`
 
 function tableHtml(group: PaymentGroup, rows: Payment[]): string {
   if (!rows.length) return ""
-  const title =
-    group === "alrajhi"
-      ? "Al Rajhi Payments."
-      : group === "local"
-        ? "Local Payments."
-        : group === "international"
-          ? "International Payment."
-          : "SADAD Payments."
+  const title = `${GROUP_LABELS[group]}.`
 
   let head = ""
   let body = ""
@@ -129,13 +122,12 @@ export function buildEmailHtml(payments: Payment[], meta: Meta, variant: EmailVa
     .join("")
 
   return `<div style="font-family:Segoe UI,Arial,sans-serif;color:#1f2d24;line-height:1.5;max-width:820px">
+    <div style="margin-bottom:18px">
+      <img src="${NAJM_LOGO_URL}" alt="Najm" width="120" style="display:block;height:auto;border:0" />
+    </div>
     <p>Dear ${esc(meta.recipient || "Team")},</p>
     <p>${VARIANT_INTRO[variant]}</p>
     ${tables || '<p style="color:#8a8a8a">No payments added yet.</p>'}
-    <p style="margin-top:28px;font-weight:600;color:#2b4a34">TreasuryDep@najm.sa</p>
-    <p style="margin:2px 0;color:#4a5a50">P.O Box 85890 | Riyadh 11612</p>
-    <p style="margin:2px 0"><a href="http://www.najm.sa/" style="color:#2b4a34">http://www.najm.sa/</a></p>
-    <p style="margin-top:16px;font-size:11px;color:#8a948c">${DISCLAIMER_EN}</p>
   </div>`
 }
 
@@ -143,27 +135,20 @@ export function buildEmailHtml(payments: Payment[], meta: Meta, variant: EmailVa
 
 function tableText(group: PaymentGroup, rows: Payment[]): string {
   if (!rows.length) return ""
-  const lines: string[] = []
-  if (group === "alrajhi") {
-    lines.push("Al Rajhi Payments.")
-    lines.push("No | Beneficiary Name | Payment in SAR | Ref Number | Short description")
-    rows.forEach((p, i) => lines.push(`${i + 1} | ${p.beneficiary} | ${money(p.amount)} | ${p.ref} | ${p.description}`))
-    lines.push(`Total: ${money(total(rows))}`)
-  } else if (group === "local") {
-    lines.push("Local Payments.")
-    lines.push("No | Beneficiary Name | Payment Amount | Ref Number | Short description")
-    rows.forEach((p, i) => lines.push(`${i + 1} | ${p.beneficiary} | ${money(p.amount)} | ${p.ref} | ${p.description}`))
-    lines.push(`Total: ${money(total(rows))}`)
-  } else if (group === "international") {
-    lines.push("International Payment.")
+  const lines: string[] = [`${GROUP_LABELS[group]}.`]
+  if (group === "international") {
     lines.push("No | Beneficiary Name | Payment | Currency | Ref Number | Short description")
     rows.forEach((p, i) =>
       lines.push(`${i + 1} | ${p.beneficiary} | ${money(p.amount)} | ${p.currency || "USD"} | ${p.ref} | ${p.description}`),
     )
-  } else {
-    lines.push("SADAD Payments.")
+  } else if (group === "sadad") {
     lines.push("No | Bill Name | Bill ref | Payment Amount | Ref Number")
     rows.forEach((p, i) => lines.push(`${i + 1} | ${p.beneficiary} | ${p.billRef} | ${money(p.amount)} | ${p.ref}`))
+    lines.push(`Total: ${money(total(rows))}`)
+  } else {
+    const amtLabel = group === "alrajhi" ? "Payment in SAR" : "Payment Amount"
+    lines.push(`No | Beneficiary Name | ${amtLabel} | Ref Number | Short description`)
+    rows.forEach((p, i) => lines.push(`${i + 1} | ${p.beneficiary} | ${money(p.amount)} | ${p.ref} | ${p.description}`))
     lines.push(`Total: ${money(total(rows))}`)
   }
   return lines.join("\n")
@@ -177,12 +162,6 @@ export function buildEmailText(payments: Payment[], meta: Meta, variant: EmailVa
     VARIANT_INTRO[variant],
     "",
     blocks.join("\n\n"),
-    "",
-    "TreasuryDep@najm.sa",
-    "P.O Box 85890 | Riyadh 11612",
-    "http://www.najm.sa/",
-    "",
-    DISCLAIMER_EN,
   ].join("\n")
 }
 
