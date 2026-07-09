@@ -32,12 +32,15 @@ export type EmailOptions = {
   columnsByGroup?: ColumnsByGroup
   /** Groups to include, in order. Defaults to all groups. */
   selectedGroups?: PaymentGroup[]
+  /** Only include payments with amount >= this value. Defaults to 0 (all). */
+  minAmount?: number
 }
 
 function resolveOptions(opts?: EmailOptions) {
   return {
     columnsByGroup: opts?.columnsByGroup ?? defaultColumnsByGroup(),
     selectedGroups: opts?.selectedGroups ?? GROUP_ORDER,
+    minAmount: opts?.minAmount ?? 0,
   }
 }
 
@@ -90,11 +93,12 @@ function tableHtml(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
 }
 
 export function buildEmailHtml(payments: Payment[], meta: Meta, variant: EmailVariant, opts?: EmailOptions): string {
-  const { columnsByGroup, selectedGroups } = resolveOptions(opts)
+  const { columnsByGroup, selectedGroups, minAmount } = resolveOptions(opts)
+  const rows = minAmount > 0 ? payments.filter((p) => (p.amount || 0) >= minAmount) : payments
   const order = GROUP_ORDER.filter((g) => selectedGroups.includes(g))
   const cols = unifiedColumns(columnsByGroup, order)
   const tables = order
-    .map((g) => tableHtml(g, groupOf(payments, g), cols))
+    .map((g) => tableHtml(g, groupOf(rows, g), cols))
     .filter(Boolean)
     .join("")
 
@@ -120,10 +124,11 @@ function tableText(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
 }
 
 export function buildEmailText(payments: Payment[], meta: Meta, variant: EmailVariant, opts?: EmailOptions): string {
-  const { columnsByGroup, selectedGroups } = resolveOptions(opts)
+  const { columnsByGroup, selectedGroups, minAmount } = resolveOptions(opts)
+  const rows = minAmount > 0 ? payments.filter((p) => (p.amount || 0) >= minAmount) : payments
   const order = GROUP_ORDER.filter((g) => selectedGroups.includes(g))
   const cols = unifiedColumns(columnsByGroup, order)
-  const blocks = order.map((g) => tableText(g, groupOf(payments, g), cols)).filter(Boolean)
+  const blocks = order.map((g) => tableText(g, groupOf(rows, g), cols)).filter(Boolean)
   return [
     `Dear ${meta.recipient || "Team"},`,
     "",

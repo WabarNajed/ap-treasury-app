@@ -35,22 +35,32 @@ export function EmailPanel({
   const [variant, setVariant] = useState<EmailVariant>("cfo")
   const [copied, setCopied] = useState<"" | "rich" | "text">("")
   const [selectedGroups, setSelectedGroups] = useState<PaymentGroup[]>(GROUP_ORDER)
+  const [aboveOnly, setAboveOnly] = useState(false)
+  const [threshold, setThreshold] = useState(1_000_000)
 
-  // Groups that actually have payments
-  const present = useMemo(() => GROUP_ORDER.filter((g) => payments.some((p) => p.group === g)), [payments])
+  const minAmount = aboveOnly ? threshold : 0
+
+  // Payments after the amount filter — drives counts and preview alike.
+  const filtered = useMemo(
+    () => (minAmount > 0 ? payments.filter((p) => (p.amount || 0) >= minAmount) : payments),
+    [payments, minAmount],
+  )
+
+  // Groups that actually have payments (after the amount filter)
+  const present = useMemo(() => GROUP_ORDER.filter((g) => filtered.some((p) => p.group === g)), [filtered])
   const countByGroup = useMemo(() => {
     const m = {} as Record<PaymentGroup, number>
-    for (const g of GROUP_ORDER) m[g] = payments.filter((p) => p.group === g).length
+    for (const g of GROUP_ORDER) m[g] = filtered.filter((p) => p.group === g).length
     return m
-  }, [payments])
+  }, [filtered])
 
   const html = useMemo(
-    () => buildEmailHtml(payments, meta, variant, { columnsByGroup, selectedGroups }),
-    [payments, meta, variant, columnsByGroup, selectedGroups],
+    () => buildEmailHtml(payments, meta, variant, { columnsByGroup, selectedGroups, minAmount }),
+    [payments, meta, variant, columnsByGroup, selectedGroups, minAmount],
   )
   const text = useMemo(
-    () => buildEmailText(payments, meta, variant, { columnsByGroup, selectedGroups }),
-    [payments, meta, variant, columnsByGroup, selectedGroups],
+    () => buildEmailText(payments, meta, variant, { columnsByGroup, selectedGroups, minAmount }),
+    [payments, meta, variant, columnsByGroup, selectedGroups, minAmount],
   )
 
   async function copyRich() {
@@ -109,6 +119,38 @@ export function EmailPanel({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Amount filter — above threshold email */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="mb-3 text-sm font-semibold text-foreground">Amount filter</h3>
+          <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
+            <input
+              type="checkbox"
+              className="size-4 accent-[var(--primary)]"
+              checked={aboveOnly}
+              onChange={(e) => setAboveOnly(e.target.checked)}
+            />
+            <span className="text-foreground">Only payments above the threshold</span>
+          </label>
+          <div className="mt-2">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Threshold (SAR)</label>
+            <input
+              type="number"
+              min={0}
+              step={100000}
+              disabled={!aboveOnly}
+              className={`${field} tabular-nums disabled:opacity-50`}
+              value={threshold}
+              onChange={(e) => setThreshold(Number(e.target.value) || 0)}
+            />
+          </div>
+          {aboveOnly && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Showing <span className="font-medium text-foreground">{filtered.length}</span> payment(s) ≥{" "}
+              {threshold.toLocaleString("en-US")} across all groups.
+            </p>
+          )}
         </div>
 
         {/* Groups to include */}
