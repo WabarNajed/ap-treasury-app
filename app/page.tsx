@@ -25,7 +25,7 @@ export default function Page() {
     removePayment,
     clearAll,
     setMeta,
-    toggleColumn,
+    toggleColumnAll,
     resetColumns,
   } = usePayments()
   const [tab, setTab] = useState<Tab>("payments")
@@ -130,7 +130,7 @@ export default function Page() {
             meta={meta}
             onMeta={setMeta}
             columnsByGroup={columnsByGroup}
-            onToggleColumn={toggleColumn}
+            onToggleColumnAll={toggleColumnAll}
             onResetColumns={resetColumns}
           />
         )}

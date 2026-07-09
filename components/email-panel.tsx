@@ -22,20 +22,19 @@ export function EmailPanel({
   meta,
   onMeta,
   columnsByGroup,
-  onToggleColumn,
+  onToggleColumnAll,
   onResetColumns,
 }: {
   payments: Payment[]
   meta: Meta
   onMeta: (patch: Partial<Meta>) => void
   columnsByGroup: ColumnsByGroup
-  onToggleColumn: (group: PaymentGroup, key: ColumnKey) => void
+  onToggleColumnAll: (key: ColumnKey) => void
   onResetColumns: () => void
 }) {
   const [variant, setVariant] = useState<EmailVariant>("cfo")
   const [copied, setCopied] = useState<"" | "rich" | "text">("")
   const [selectedGroups, setSelectedGroups] = useState<PaymentGroup[]>(GROUP_ORDER)
-  const [colGroup, setColGroup] = useState<PaymentGroup>("alrajhi")
 
   // Groups that actually have payments
   const present = useMemo(() => GROUP_ORDER.filter((g) => payments.some((p) => p.group === g)), [payments])
@@ -83,7 +82,12 @@ export function EmailPanel({
     setSelectedGroups((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]))
   }
 
-  const activeCols = columnsByGroup[colGroup] ?? []
+  // A column counts as visible if it's enabled for any group (tables are unified).
+  const activeKeys = useMemo(() => {
+    const set = new Set<ColumnKey>()
+    for (const g of GROUP_ORDER) for (const k of columnsByGroup[g] ?? []) set.add(k)
+    return set
+  }, [columnsByGroup])
 
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -145,7 +149,7 @@ export function EmailPanel({
           )}
         </div>
 
-        {/* Column chooser per group */}
+        {/* Global column chooser — applies to every table so they stay identical */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Columns</h3>
@@ -156,17 +160,9 @@ export function EmailPanel({
               <RotateCcw className="size-3" /> Reset
             </button>
           </div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">Configure group</label>
-          <select className={`${field} mb-3`} value={colGroup} onChange={(e) => setColGroup(e.target.value as PaymentGroup)}>
-            {GROUP_ORDER.map((g) => (
-              <option key={g} value={g}>
-                {GROUP_LABELS[g]}
-              </option>
-            ))}
-          </select>
           <div className="flex flex-col gap-1.5">
             {COLUMNS.map((c) => {
-              const checked = activeCols.includes(c.key)
+              const checked = activeKeys.has(c.key)
               const isNo = c.key === "no"
               return (
                 <label
@@ -178,9 +174,9 @@ export function EmailPanel({
                   <input
                     type="checkbox"
                     className="size-4 accent-[var(--primary)]"
-                    checked={checked}
+                    checked={isNo || checked}
                     disabled={isNo}
-                    onChange={() => onToggleColumn(colGroup, c.key)}
+                    onChange={() => onToggleColumnAll(c.key)}
                   />
                   <span className="text-foreground">{c.label}</span>
                 </label>
@@ -188,7 +184,7 @@ export function EmailPanel({
             })}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Toggling applies to <span className="font-medium text-foreground">{GROUP_LABELS[colGroup]}</span> only.
+            Columns apply to all tables so every group lines up identically.
           </p>
         </div>
 

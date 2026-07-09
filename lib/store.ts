@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { Payment, PaymentGroup } from "./types"
+import { GROUP_ORDER } from "./types"
 import { type ColumnKey, type ColumnsByGroup, defaultColumnsByGroup } from "./columns"
 
 const KEY = "najm.payments.v1"
@@ -92,6 +93,20 @@ export function usePayments() {
     setColumnsState((prev) => ({ ...prev, [group]: keys }))
   }, [])
 
+  /** Toggle a column for EVERY group at once so all email tables stay identical. */
+  const toggleColumnAll = useCallback((key: ColumnKey) => {
+    setColumnsState((prev) => {
+      // A column is considered "on" if it's enabled for any group.
+      const on = GROUP_ORDER.some((g) => (prev[g] ?? []).includes(key))
+      const next = {} as ColumnsByGroup
+      for (const g of GROUP_ORDER) {
+        const cur = prev[g] ?? []
+        next[g] = on ? cur.filter((k) => k !== key) : cur.includes(key) ? cur : [...cur, key]
+      }
+      return next
+    })
+  }, [])
+
   const resetColumns = useCallback(() => setColumnsState(defaultColumnsByGroup()), [])
 
   return {
@@ -106,6 +121,7 @@ export function usePayments() {
     clearAll,
     setMeta,
     toggleColumn,
+    toggleColumnAll,
     setGroupColumns,
     resetColumns,
   }
