@@ -14,8 +14,20 @@ import { EmailPanel } from "@/components/email-panel"
 type Tab = "payments" | "email"
 
 export default function Page() {
-  const { payments, meta, loaded, addPayment, addMany, updatePayment, removePayment, clearAll, setMeta } =
-    usePayments()
+  const {
+    payments,
+    meta,
+    columnsByGroup,
+    loaded,
+    addPayment,
+    addMany,
+    updatePayment,
+    removePayment,
+    clearAll,
+    setMeta,
+    toggleColumnAll,
+    resetColumns,
+  } = usePayments()
   const [tab, setTab] = useState<Tab>("payments")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Payment | null>(null)
@@ -113,7 +125,14 @@ export default function Page() {
             />
           </div>
         ) : (
-          <EmailPanel payments={payments} meta={meta} onMeta={setMeta} />
+          <EmailPanel
+            payments={payments}
+            meta={meta}
+            onMeta={setMeta}
+            columnsByGroup={columnsByGroup}
+            onToggleColumnAll={toggleColumnAll}
+            onResetColumns={resetColumns}
+          />
         )}
       </div>
 

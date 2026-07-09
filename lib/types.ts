@@ -1,13 +1,34 @@
-export type PaymentGroup = "alrajhi" | "local" | "international" | "sadad"
+export type PaymentGroup =
+  | "alrajhi"
+  | "local"
+  | "international"
+  | "sadad"
+  | "da"
+  | "nrn"
+  | "bt"
+  | "bulk"
 
 export const GROUP_LABELS: Record<PaymentGroup, string> = {
   alrajhi: "Al Rajhi Payments",
   local: "Local Payments",
   international: "International Payment",
   sadad: "SADAD Payments",
+  da: "DA Payments",
+  nrn: "NRN Payments",
+  bt: "BT Payments",
+  bulk: "BULK Payments",
 }
 
-export const GROUP_ORDER: PaymentGroup[] = ["alrajhi", "local", "international", "sadad"]
+export const GROUP_ORDER: PaymentGroup[] = [
+  "alrajhi",
+  "local",
+  "international",
+  "sadad",
+  "da",
+  "nrn",
+  "bt",
+  "bulk",
+]
 
 export type Payment = {
   id: string
