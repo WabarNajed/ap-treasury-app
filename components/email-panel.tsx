@@ -1,9 +1,17 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Copy, Check, FileText } from "lucide-react"
+import { Copy, Check, FileText, RotateCcw } from "lucide-react"
 import { buildEmailHtml, buildEmailText } from "@/lib/email"
-import { VARIANT_LABELS, type EmailVariant, type Payment } from "@/lib/types"
+import { COLUMNS, type ColumnKey, type ColumnsByGroup } from "@/lib/columns"
+import {
+  GROUP_LABELS,
+  GROUP_ORDER,
+  VARIANT_LABELS,
+  type EmailVariant,
+  type Payment,
+  type PaymentGroup,
+} from "@/lib/types"
 import type { Meta } from "@/lib/store"
 
 const VARIANTS: EmailVariant[] = ["cfo", "ceo", "danrn"]
@@ -13,16 +21,38 @@ export function EmailPanel({
   payments,
   meta,
   onMeta,
+  columnsByGroup,
+  onToggleColumn,
+  onResetColumns,
 }: {
   payments: Payment[]
   meta: Meta
   onMeta: (patch: Partial<Meta>) => void
+  columnsByGroup: ColumnsByGroup
+  onToggleColumn: (group: PaymentGroup, key: ColumnKey) => void
+  onResetColumns: () => void
 }) {
   const [variant, setVariant] = useState<EmailVariant>("cfo")
   const [copied, setCopied] = useState<"" | "rich" | "text">("")
+  const [selectedGroups, setSelectedGroups] = useState<PaymentGroup[]>(GROUP_ORDER)
+  const [colGroup, setColGroup] = useState<PaymentGroup>("alrajhi")
 
-  const html = useMemo(() => buildEmailHtml(payments, meta, variant), [payments, meta, variant])
-  const text = useMemo(() => buildEmailText(payments, meta, variant), [payments, meta, variant])
+  // Groups that actually have payments
+  const present = useMemo(() => GROUP_ORDER.filter((g) => payments.some((p) => p.group === g)), [payments])
+  const countByGroup = useMemo(() => {
+    const m = {} as Record<PaymentGroup, number>
+    for (const g of GROUP_ORDER) m[g] = payments.filter((p) => p.group === g).length
+    return m
+  }, [payments])
+
+  const html = useMemo(
+    () => buildEmailHtml(payments, meta, variant, { columnsByGroup, selectedGroups }),
+    [payments, meta, variant, columnsByGroup, selectedGroups],
+  )
+  const text = useMemo(
+    () => buildEmailText(payments, meta, variant, { columnsByGroup, selectedGroups }),
+    [payments, meta, variant, columnsByGroup, selectedGroups],
+  )
 
   async function copyRich() {
     try {
@@ -49,8 +79,14 @@ export function EmailPanel({
     setTimeout(() => setCopied(""), 1600)
   }
 
+  function toggleGroup(g: PaymentGroup) {
+    setSelectedGroups((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]))
+  }
+
+  const activeCols = columnsByGroup[colGroup] ?? []
+
   return (
-    <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
+    <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
       <div className="space-y-4">
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="mb-3 text-sm font-semibold text-foreground">Email variant</h3>
@@ -69,6 +105,91 @@ export function EmailPanel({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Groups to include */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Groups in email</h3>
+            <div className="flex gap-2 text-xs">
+              <button className="text-primary hover:underline" onClick={() => setSelectedGroups(GROUP_ORDER)}>
+                All
+              </button>
+              <button className="text-muted-foreground hover:underline" onClick={() => setSelectedGroups([])}>
+                None
+              </button>
+            </div>
+          </div>
+          {present.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No payments added yet.</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {present.map((g) => (
+                <label
+                  key={g}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[var(--primary)]"
+                    checked={selectedGroups.includes(g)}
+                    onChange={() => toggleGroup(g)}
+                  />
+                  <span className="flex-1 text-foreground">{GROUP_LABELS[g]}</span>
+                  <span className="rounded bg-secondary px-1.5 py-0.5 text-xs tabular-nums text-secondary-foreground">
+                    {countByGroup[g]}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Column chooser per group */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Columns</h3>
+            <button
+              onClick={onResetColumns}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
+            >
+              <RotateCcw className="size-3" /> Reset
+            </button>
+          </div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Configure group</label>
+          <select className={`${field} mb-3`} value={colGroup} onChange={(e) => setColGroup(e.target.value as PaymentGroup)}>
+            {GROUP_ORDER.map((g) => (
+              <option key={g} value={g}>
+                {GROUP_LABELS[g]}
+              </option>
+            ))}
+          </select>
+          <div className="flex flex-col gap-1.5">
+            {COLUMNS.map((c) => {
+              const checked = activeCols.includes(c.key)
+              const isNo = c.key === "no"
+              return (
+                <label
+                  key={c.key}
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
+                    isNo ? "opacity-60" : "cursor-pointer hover:bg-muted"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[var(--primary)]"
+                    checked={checked}
+                    disabled={isNo}
+                    onChange={() => onToggleColumn(colGroup, c.key)}
+                  />
+                  <span className="text-foreground">{c.label}</span>
+                </label>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Toggling applies to <span className="font-medium text-foreground">{GROUP_LABELS[colGroup]}</span> only.
+          </p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
