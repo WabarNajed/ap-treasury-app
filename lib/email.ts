@@ -25,6 +25,12 @@ const VARIANT_INTRO: Record<EmailVariant, string> = {
   danrn: "The following DA / NRN payments are uploaded in the bank for your kind approval.",
 }
 
+/** Intro line, with an "Above SAR X" note appended when an amount filter is set. */
+function introText(variant: EmailVariant, minAmount: number): string {
+  const base = VARIANT_INTRO[variant]
+  return minAmount > 0 ? `${base} (Above SAR ${money(minAmount)})` : base
+}
+
 export const NAJM_LOGO_URL =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picture2-jyEtLzhDE8zC6Xwa9lBKp6DlPg5DWA.png"
 
@@ -56,8 +62,11 @@ function tableHtml(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
   if (!rows.length || !cols.length) return ""
   const title = `${GROUP_LABELS[group]}.`
 
-  const tableWidth = cols.reduce((s, c) => s + c.width, 0)
-  const colgroup = `<colgroup>${cols.map((c) => `<col style="width:${c.width}px">`).join("")}</colgroup>`
+  // Percentage widths keep every table identical while spanning the full width.
+  const totalW = cols.reduce((s, c) => s + c.width, 0)
+  const colgroup = `<colgroup>${cols
+    .map((c) => `<col style="width:${((c.width / totalW) * 100).toFixed(3)}%">`)
+    .join("")}</colgroup>`
 
   const head = `<tr>${cols.map((c) => `<th style="${th}">${esc(c.label)}</th>`).join("")}</tr>`
 
@@ -88,7 +97,7 @@ function tableHtml(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
   }
 
   return `<p style="font-weight:700;color:#2b4a34;margin:22px 0 8px">${title}</p>
-    <table style="border-collapse:collapse;width:${tableWidth}px;max-width:100%;table-layout:fixed" cellspacing="0" cellpadding="0">
+    <table style="border-collapse:collapse;width:100%;table-layout:fixed" cellspacing="0" cellpadding="0">
       ${colgroup}
       <thead>${head}</thead><tbody>${body}${totalRow}</tbody></table>`
 }
@@ -108,7 +117,7 @@ export function buildEmailHtml(payments: Payment[], meta: Meta, variant: EmailVa
       <img src="${NAJM_LOGO_URL}" alt="Najm" width="120" style="display:block;height:auto;border:0" />
     </div>
     <p>Dear ${esc(meta.recipient || "Team")},</p>
-    <p>${VARIANT_INTRO[variant]}</p>
+    <p>${esc(introText(variant, minAmount))}</p>
     ${tables || '<p style="color:#8a8a8a">No payments to show for the selected groups.</p>'}
   </div>`
 }
@@ -133,7 +142,7 @@ export function buildEmailText(payments: Payment[], meta: Meta, variant: EmailVa
   return [
     `Dear ${meta.recipient || "Team"},`,
     "",
-    VARIANT_INTRO[variant],
+    introText(variant, minAmount),
     "",
     blocks.join("\n\n"),
   ].join("\n")
