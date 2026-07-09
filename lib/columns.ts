@@ -10,21 +10,21 @@ export type ColumnDef = {
   label: string
   /** right-aligned numeric column that also drives the Total row */
   numeric?: boolean
-  /** fixed width used in the email colgroup so every table lines up; the
-   *  beneficiary column is left flexible (undefined) to absorb slack. */
-  width?: string
+  /** Fixed pixel width so every table renders at exactly the same size and
+   *  all columns line up across groups. All columns are fixed (no flex). */
+  width: number
   value: (p: Payment, index: number) => string
 }
 
-/** Canonical order columns render in when visible. */
+/** Canonical order columns render in when visible. All widths are fixed px. */
 export const COLUMNS: ColumnDef[] = [
-  { key: "no", label: "No", width: "36px", value: (_p, i) => String(i + 1) },
-  { key: "beneficiary", label: "Beneficiary Name", value: (p) => p.beneficiary },
-  { key: "billRef", label: "Bill ref", width: "115px", value: (p) => p.billRef },
-  { key: "amount", label: "Payment Amount", numeric: true, width: "115px", value: (p) => moneyValue(p.amount) },
-  { key: "currency", label: "Currency", width: "70px", value: (p) => p.currency || "SAR" },
-  { key: "ref", label: "Ref Number", width: "105px", value: (p) => p.ref },
-  { key: "description", label: "Short description", width: "150px", value: (p) => p.description },
+  { key: "no", label: "No", width: 40, value: (_p, i) => String(i + 1) },
+  { key: "beneficiary", label: "Beneficiary Name", width: 260, value: (p) => p.beneficiary },
+  { key: "billRef", label: "Bill ref", width: 120, value: (p) => p.billRef },
+  { key: "amount", label: "Payment Amount", numeric: true, width: 120, value: (p) => moneyValue(p.amount) },
+  { key: "currency", label: "Currency", width: 70, value: (p) => p.currency || "SAR" },
+  { key: "ref", label: "Ref Number", width: 110, value: (p) => p.ref },
+  { key: "description", label: "Short description", width: 160, value: (p) => p.description },
 ]
 
 export const ALL_COLUMN_KEYS: ColumnKey[] = COLUMNS.map((c) => c.key)

@@ -56,7 +56,8 @@ function tableHtml(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
   if (!rows.length || !cols.length) return ""
   const title = `${GROUP_LABELS[group]}.`
 
-  const colgroup = `<colgroup>${cols.map((c) => `<col${c.width ? ` style="width:${c.width}"` : ""}>`).join("")}</colgroup>`
+  const tableWidth = cols.reduce((s, c) => s + c.width, 0)
+  const colgroup = `<colgroup>${cols.map((c) => `<col style="width:${c.width}px">`).join("")}</colgroup>`
 
   const head = `<tr>${cols.map((c) => `<th style="${th}">${esc(c.label)}</th>`).join("")}</tr>`
 
@@ -87,7 +88,7 @@ function tableHtml(group: PaymentGroup, rows: Payment[], cols: ColumnDef[]): str
   }
 
   return `<p style="font-weight:700;color:#2b4a34;margin:22px 0 8px">${title}</p>
-    <table style="border-collapse:collapse;width:100%;table-layout:fixed" cellspacing="0" cellpadding="0">
+    <table style="border-collapse:collapse;width:${tableWidth}px;max-width:100%;table-layout:fixed" cellspacing="0" cellpadding="0">
       ${colgroup}
       <thead>${head}</thead><tbody>${body}${totalRow}</tbody></table>`
 }
