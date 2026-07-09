@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Najm AP &amp; Treasury Payment Control Center</title>
+<style>
+  :root{
+    --primary:#006C5B; --primary-dark:#00513f; --secondary:#00B050;
+    --bg:#F7F9F8; --card:#ffffff; --text:#0f2620; --muted:#5b6b66;
+    --border:#e3eae7; --danger:#c0392b; --warn:#b9770e; --info:#1f6feb;
+    --radius:12px; --shadow:0 1px 3px rgba(0,40,30,.08),0 4px 16px rgba(0,40,30,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI",Tahoma,system-ui,-apple-system,Arial,sans-serif;font-size:14px;line-height:1.5}
+  a{color:var(--primary);text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  h1,h2,h3,h4{margin:0;color:var(--text)}
+  .hidden{display:none !important}
+  .muted{color:var(--muted)}
+  .right{text-align:right}
+  .center{text-align:center}
+  .nowrap{white-space:nowrap}
+  .mono{font-variant-numeric:tabular-nums}
+
+  /* Buttons */
+  .btn{border:1px solid var(--border);background:#fff;color:var(--text);padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--primary);color:var(--primary)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn.primary:hover{background:var(--primary-dark);color:#fff}
+  .btn.secondary{background:var(--secondary);color:#fff;border-color:var(--secondary)}
+  .btn.secondary:hover{filter:brightness(.93);color:#fff}
+  .btn.danger{background:#fff;color:var(--danger);border-color:#f0c8c2}
+  .btn.danger:hover{background:var(--danger);color:#fff}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.block{width:100%;justify-content:center}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .b-grey{background:#eef2f1;color:#5b6b66}
+  .b-blue{background:#e7f0fd;color:#1f6feb}
+  .b-amber{background:#fdf2e2;color:#b9770e}
+  .b-green{background:#e3f6ec;color:#1c7d49}
+  .b-red{background:#fbe8e6;color:#c0392b}
+  .b-teal{background:#dff3ef;color:#006C5B}
+
+  /* Inputs */
+  input,select,textarea{font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,108,91,.12)}
+  label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px}
+  .field{margin-bottom:14px}
+  textarea{resize:vertical;min-height:90px}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card.pad{padding:20px}
+
+  /* Auth */
+  #authWrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(135deg,#024a3d 0%,#006C5B 55%,#00B050 140%)}
+  .auth-box{width:100%;max-width:440px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+  .auth-head{padding:26px 28px 18px;text-align:center}
+  .auth-body{padding:6px 28px 26px}
+  .logo-mark{width:54px;height:54px;border-radius:14px;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;letter-spacing:1px;margin-bottom:10px}
+  .auth-tabs{display:flex;gap:8px;margin:14px 0 18px}
+  .auth-tabs button{flex:1;background:#f0f4f3;border:none;padding:10px;border-radius:8px;font-weight:700;color:var(--muted)}
+  .auth-tabs button.active{background:var(--primary);color:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .msg{padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;font-weight:600}
+  .msg.err{background:#fbe8e6;color:var(--danger)}
+  .msg.ok{background:#e3f6ec;color:#1c7d49}
+  .msg.warn{background:#fdf2e2;color:#b9770e}
+
+  /* App shell */
+  #appWrap{display:none;min-height:100vh}
+  .topbar{height:60px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:14px;padding:0 18px;position:sticky;top:0;z-index:40}
+  .topbar .brand{font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+  .topbar .brand .lm{width:34px;height:34px;border-radius:9px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800}
+  .topbar .spacer{flex:1}
+  .topbar .uchip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);padding:5px 10px;border-radius:999px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--secondary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;overflow:hidden}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .hamburger{background:rgba(255,255,255,.14);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:18px}
+  .layout{display:flex;min-height:calc(100vh - 60px)}
+  .sidebar{width:248px;background:#fff;border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;flex-shrink:0}
+  .nav-sec{font-size:10px;font-weight:800;letter-spacing:.8px;color:#9bafa9;text-transform:uppercase;padding:14px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:var(--text);font-weight:600;font-size:13px;margin-bottom:2px;cursor:pointer}
+  .nav-item:hover{background:#f0f6f4}
+  .nav-item.active{background:var(--primary);color:#fff}
+  .nav-item .ic{width:18px;text-align:center}
+  .nav-item .count{margin-left:auto;background:#e3f6ec;color:#1c7d49;border-radius:999px;font-size:10px;padding:1px 7px;font-weight:800}
+  .nav-item.active .count{background:rgba(255,255,255,.25);color:#fff}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .content{flex:1;padding:22px}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+  .page-head h1{font-size:22px}
+  .page-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* Footer */
+  .footer{border-top:1px solid var(--border);background:#fff;padding:16px 22px;color:var(--muted);font-size:12px}
+  .footer .cols{display:flex;gap:40px;flex-wrap:wrap}
+  .footer b{color:var(--text)}
+
+  /* Cards grid */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:18px}
+  .stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .stat .lbl{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+  .stat .val{font-size:24px;font-weight:800;margin-top:6px}
+  .stat .val.sm{font-size:18px}
+  .stat .sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .stat .bar{height:3px;border-radius:3px;background:var(--primary);margin-top:10px}
+
+  /* Tables */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;min-width:150px}
+  .tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;max-height:62vh}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  thead th{position:sticky;top:0;background:#eef4f2;color:#2b4640;text-align:left;padding:10px 12px;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--border);z-index:2;cursor:pointer;user-select:none}
+  tbody td{padding:9px 12px;border-bottom:1px solid #f0f4f3;white-space:nowrap}
+  tbody tr:hover{background:#f7faf9}
+  tbody tr.sel{background:#e9f6f1}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  .chk{width:16px;height:16px;cursor:pointer}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(8,30,24,.5);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:80;overflow:auto}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:620px;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:pop .15s ease}
+  .modal.lg{max-width:920px}
+  @keyframes pop{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:between;gap:10px}
+  .modal-head h3{flex:1;font-size:17px}
+  .modal-body{padding:18px 20px;max-height:70vh;overflow:auto}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .x{background:none;border:none;font-size:22px;color:var(--muted);line-height:1}
+
+  /* Toast */
+  #toasts{position:fixed;right:18px;bottom:18px;z-index:100;display:flex;flex-direction:column;gap:10px}
+  .toast{background:#fff;border-left:4px solid var(--primary);box-shadow:0 8px 30px rgba(0,0,0,.18);border-radius:8px;padding:12px 16px;min-width:240px;max-width:360px;font-size:13px;font-weight:600;animation:pop .15s}
+  .toast.ok{border-color:var(--secondary)} .toast.err{border-color:var(--danger)} .toast.warn{border-color:var(--warn)}
+
+  .tag-route{display:inline-flex;gap:6px;flex-wrap:wrap}
+  .tag-route span{background:#eef4f2;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:#2b4640}
+  .tag-route .done{background:#e3f6ec;color:#1c7d49}
+  .tag-route .cur{background:#fdf2e2;color:#b9770e}
+
+  .section-title{font-size:13px;font-weight:800;color:var(--primary);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+  .kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;font-size:13px}
+  .kv div:nth-child(odd){color:var(--muted);font-weight:600}
+  .chart-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:18px}
+  canvas{max-width:100%}
+  .email-preview{background:#fff;border:1px solid var(--border);border-radius:10px;padding:26px;font-family:"Segoe UI",Tahoma,Arial}
+  .email-preview h2{color:var(--primary)}
+  .email-preview table{font-size:12.5px;margin:8px 0 4px}
+  .email-preview th{background:var(--primary);color:#fff;cursor:default}
+  .email-preview .cat-total{font-weight:800;color:var(--primary)}
+  .email-preview .grand{font-size:15px;font-weight:800;color:var(--primary);margin-top:10px;padding:10px;background:#eef4f2;border-radius:8px}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .pill{padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:#fff;font-weight:600;font-size:12px;cursor:pointer}
+  .pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  @media(max-width:860px){
+    .sidebar{position:fixed;left:0;top:60px;bottom:0;z-index:35;transform:translateX(-100%);transition:.2s;box-shadow:6px 0 30px rgba(0,0,0,.15)}
+    .sidebar.open{transform:none}
+    .grid2{grid-template-columns:1fr}
+  }
+  [dir="rtl"]{}
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH ===================== -->
+<div id="authWrap">
+  <div class="auth-box">
+    <div class="auth-head">
+      <div class="logo-mark">N</div>
+      <h2 style="color:var(--primary)">Najm Payment Control Center</h2>
+      <p class="muted" style="margin:6px 0 0;font-size:12.5px">AP &amp; Treasury Payment Lifecycle Platform</p>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="active" onclick="showAuth('login')">Login</button>
+        <button id="tabReg" onclick="showAuth('register')">Register</button>
+      </div>
+    </div>
+    <div class="auth-body">
+      <!-- LOGIN -->
+      <form id="loginForm" onsubmit="return doLogin(event)">
+        <div id="loginMsg"></div>
+        <div class="field"><label>Email</label><input type="email" id="liEmail" placeholder="you@najm.sa" required></div>
+        <div class="field"><label>Password</label><input type="password" id="liPass" placeholder="••••••••" required></div>
+        <button class="btn primary block" type="submit">Sign In</button>
+        <p class="muted center" style="margin-top:14px;font-size:12px">Default admin: admin@najm.sa / Admin@12345</p>
+      </form>
+      <!-- REGISTER -->
+      <form id="regForm" class="hidden" onsubmit="return doRegister(event)">
+        <div id="regMsg"></div>
+        <div class="grid2">
+          <div class="field"><label>Full Name</label><input id="rgName" required></div>
+          <div class="field"><label>Email (@najm.sa)</label><input type="email" id="rgEmail" required></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Department</label>
+            <select id="rgDept"></select>
+          </div>
+          <div class="field"><label>Job Title</label><input id="rgTitle" required></div>
+        </div>
+        <div class="field"><label>Mobile Number</label><input id="rgMobile" placeholder="05XXXXXXXX" required></div>
+        <div class="grid2">
+          <div class="field"><label>Password</label><input type="password" id="rgPass" required></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="rgPass2" required></div>
+        </div>
+        <p class="muted" style="font-size:11px;margin:-4px 0 12px">Min 8 chars, uppercase, lowercase, number &amp; special character.</p>
+        <button class="btn primary block" type="submit">Create Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="appWrap">
+  <div class="topbar">
+    <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="brand"><span class="lm">N</span><span class="nowrap">Najm Payment Control Center</span></div>
+    <div class="spacer"></div>
+    <button class="btn sm" onclick="toggleLang()" id="langBtn" style="background:rgba(255,255,255,.14);color:#fff;border-color:transparent">EN / ع</button>
+    <div class="uchip">
+      <div class="avatar" id="topAvatar">U</div>
+      <div style="line-height:1.2">
+        <div style="font-size:12.5px;font-weight:700" id="topName">User</div>
+        <div style="font-size:10.5px;opacity:.85" id="topRole">Role</div>
+      </div>
+    </div>
+    <button class="btn sm" onclick="logout()" style="background:rgba(255,255,255,.14);color:#fff;border-color:transparent">Logout</button>
+  </div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <div class="content" id="content"></div>
+      <footer class="footer">
+        <div class="cols">
+          <div><div class="muted" style="margin-bottom:4px">Prepared By</div><b>Abdullah M. Al Muqrin</b><br><span class="muted">Acting AP Manager</span></div>
+          <div style="align-self:flex-end"><b>Ibrahim K. Alluhaydi</b><br><span class="muted">Treasury and Investment Manager</span></div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toasts"></div>
+
+<script>
+/* ============================================================
+   NAJM AP & TREASURY PAYMENT CONTROL CENTER
+   Single-file app. Data persisted in localStorage.
+============================================================ */
+
+/* ---------- Storage helpers ---------- */
+const DB = {
+  get(k,def){ try{const v=localStorage.getItem('najm_'+k);return v?JSON.parse(v):def}catch(e){return def} },
+  set(k,v){ localStorage.setItem('najm_'+k,JSON.stringify(v)); },
+};
+const uid = (p)=> p+Date.now().toString(36).slice(-5)+Math.floor(Math.random()*900+100);
+const now = ()=> new Date().toISOString();
+const fmtDate = (d)=>{ if(!d) return '-'; const x=new Date(d); if(isNaN(x)) return d; return x.toLocaleDateString('en-GB'); };
+const fmtDateTime = (d)=>{ if(!d) return '-'; const x=new Date(d); if(isNaN(x)) return d; return x.toLocaleString('en-GB',{hour12:false}); };
+const money = (n)=> (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = (s)=> String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Constants ---------- */
+const ROLES = ["AP User","AP Manager","Treasury User","Treasury Manager","Head of Revenue & Cash Management","COO Office","CFO Office","CFO","CEO Office","Admin"];
+const DEPARTMENTS_DEFAULT = ["Accounts Payable","Treasury","Revenue & Cash Management","COO Office","CFO Office","CEO Office","Finance","IT"];
+const CATEGORIES = ["Al Rajhi Payments","Local Payments","SADAD Payments","NRN Payments","DA Payments","Other Payments"];
+const PTYPES = ["Standard","NRN","DA","SADAD","Petty Cash","EOS","Rent","Services","Other"];
+const BANKS = ["Al Rajhi","Local Bank","SADAD","Other"];
+const STATUSES = ["Pending","Under Treasury Review","Uploaded to Bank - Pending Bank Approval Cycle","Approved","Rejected / Returned by Bank","Cancelled"];
+const ISSUE_STATUSES = ["Open","Under Review","Resolved","Re-uploaded to Bank","Cancelled"];
+
+const STATUS_BADGE = {
+  "Pending":"b-grey","Under Treasury Review":"b-blue",
+  "Uploaded to Bank - Pending Bank Approval Cycle":"b-amber",
+  "Approved":"b-green","Rejected / Returned by Bank":"b-red","Cancelled":"b-grey"
+};
+
+/* Page registry: id -> {title, section, roles, icon} */
+const PAGES = [
+  {id:"dashboard",t:"Dashboard",sec:"Overview",ic:"▣",roles:"*"},
+  {id:"upload",t:"Upload AP Payments",sec:"Accounts Payable",ic:"⬆",roles:["AP User","AP Manager","Admin"]},
+  {id:"apbatch",t:"AP Batch Review",sec:"Accounts Payable",ic:"▤",roles:["AP User","AP Manager","Admin"]},
+  {id:"current",t:"Current Payments",sec:"Payments",ic:"≣",roles:"*"},
+  {id:"treasury",t:"Treasury Review",sec:"Treasury",ic:"⚖",roles:["Treasury User","Treasury Manager","Admin"]},
+  {id:"approvals",t:"Approval Center",sec:"Treasury",ic:"✔",roles:["Treasury Manager","Head of Revenue & Cash Management","COO Office","CFO Office","CFO","CEO Office","Admin"]},
+  {id:"bank",t:"Bank Uploaded Payments",sec:"Treasury",ic:"🏦",roles:"*"},
+  {id:"issues",t:"Payment Issues",sec:"Treasury",ic:"⚠",roles:"*"},
+  {id:"history",t:"Payment History",sec:"Payments",ic:"⏱",roles:"*"},
+  {id:"email",t:"Email Generator",sec:"Treasury",ic:"✉",roles:["Treasury User","Treasury Manager","CFO Office","CEO Office","Admin"]},
+  {id:"reports",t:"Reports & Analytics",sec:"Insights",ic:"📊",roles:"*"},
+  {id:"audit",t:"Audit Log",sec:"Insights",ic:"🛡",roles:["Treasury Manager","AP Manager","CFO","Admin"]},
+  {id:"userapproval",t:"User Approval Center",sec:"Administration",ic:"👥",roles:["Admin"]},
+  {id:"users",t:"User Management",sec:"Administration",ic:"⚙",roles:["Admin"]},
+  {id:"profile",t:"My Profile",sec:"Account",ic:"🙍",roles:"*"},
+  {id:"settings",t:"Settings",sec:"Administration",ic:"🔧",roles:["Admin"]},
+  {id:"about",t:"About Project",sec:"Account",ic:"ℹ",roles:"*"},
+];
+
+/* ---------- Seed ---------- */
+function seed(){
+  if(!DB.get('seeded')){
+    const admin = {
+      id:uid('U'), name:"System Administrator", email:"admin@najm.sa", dept:"Finance",
+      title:"Administrator", mobile:"0500000000", pass:"Admin@12345", role:"Admin",
+      status:"Active", photo:"", failed:0, locked:false, created:now(), loginHistory:[]
+    };
+    DB.set('users',[admin]);
+    DB.set('settings',{
+      threshold:1000000,
+      signature:"Ibrahim K. Alluhaydi\nTreasury and Investment Manager",
+      departments:DEPARTMENTS_DEFAULT, banks:BANKS, categories:CATEGORIES, types:PTYPES,
+      approvers:{
+        "Head of Revenue & Cash Management":"Head of Revenue & Cash Management",
+        "COO":"Chief Operating Officer","CFO":"Chief Financial Officer","CEO":"Chief Executive Officer"
+      }
+    });
+    DB.set('payments',[]);
+    DB.set('audit',[]);
+    DB.set('emails',[]);
+    seedSamplePayments(admin);
+    DB.set('seeded',true);
+  }
+}
+function seedSamplePayments(admin){
+  const batch = uid('B');
+  const rows = [
+    // Al Rajhi
+    {cat:"Al Rajhi Payments",bank:"Al Rajhi",sup:"50001",name:"عبدالله وجدي محمد باعيسى",amt:10914.00,ref:"5105636215",desc:"Relocation Allowances",type:"Standard"},
+    {cat:"Al Rajhi Payments",bank:"Al Rajhi",sup:"50002",name:"شركة ابتكار و اعمار للمقاولات شخص واحد",amt:35880.00,ref:"5105636127",desc:"Refilling tanks for different location",type:"Services"},
+    {cat:"Al Rajhi Payments",bank:"Al Rajhi",sup:"50003",name:"مؤسسة العائلات العطرية للتجارة",amt:3930.00,ref:"5105636125",desc:"Cleaner material",type:"Services"},
+    {cat:"Al Rajhi Payments",bank:"Al Rajhi",sup:"50004",name:"شركة فلو موبيلتي",amt:55200.00,ref:"5105636123-5105636124",desc:"Passenger bus rent",type:"Rent"},
+    // Local
+    {cat:"Local Payments",bank:"Local Bank",sup:"60001",name:"ABDULLAH ALAJMI",amt:2415.69,ref:"Petty cash",desc:"Petty cash",type:"Petty Cash"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60002",name:"شركة شمال الاندلس المحدودة",amt:13455.00,ref:"5105636080",desc:"DIGITAL Signage MNT-Samsung-75 Large Format -Crystal UHD Signage",type:"Services"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60003",name:"مؤسسة كلمة للتصوير الفوتوغرافي",amt:108732.50,ref:"5105636122",desc:"Eid AlFitr 2026",type:"Services"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60004",name:"MUBARAK YEDH ALKAHTANI",amt:2602.41,ref:"5105636216",desc:"End of Services",type:"EOS"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60005",name:"MANAR ABDULAZIZ A ALROMAIH",amt:4239.59,ref:"5105636117",desc:"End of Services",type:"EOS"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60006",name:"Iron Mountain Company",amt:33419.00,ref:"5105636126",desc:"Archiving Services",type:"Services"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60007",name:"KARAKER CONTRACTING COMPANY",amt:2622.00,ref:"5105636120",desc:"Sewage tank wasted water services",type:"Services"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60008",name:"صالح عثمان و عبدالله علي محمد معيض",amt:350100.00,ref:"5105636118",desc:"Rent for Abha Aseer Br",type:"Rent"},
+    {cat:"Local Payments",bank:"Local Bank",sup:"60009",name:"شركة هلا العربية المحدودة",amt:9112.62,ref:"5105636100",desc:"Hyundai van rental dues",type:"Rent"},
+    // SADAD
+    {cat:"SADAD Payments",bank:"SADAD",sup:"70001",name:"002-Saudi Energy",amt:266.20,ref:"5105636361",desc:"30012306811",type:"SADAD"},
+    {cat:"SADAD Payments",bank:"SADAD",sup:"70002",name:"177 - Ministry of Municipal and Rural Affairs",amt:6222.50,ref:"5105636377",desc:"148910720823",type:"SADAD"},
+  ];
+  const payments = rows.map((r,i)=>({
+    id:uid('PAY'), batch, enteredOn:now(), supplier:r.sup, supplierName:r.name,
+    company:"1000", assignment:"", jeDate:now(), je:"49000"+i, jeType:"KZ",
+    amount:r.amt, origRef:r.ref, category:r.cat, ptype:r.type, bank:r.bank,
+    refNo:r.ref, shortDesc:r.desc, status:"Pending", stage:"AP Submitted",
+    createdBy:admin.email, created:now(), modBy:admin.email, mod:now(), notes:"",
+    dupOverride:false, dupRisk:null, history:[{u:admin.email,d:now(),from:"-",to:"Pending",c:"Sample seeded"}],
+    approvals:[], issue:null
+  }));
+  DB.set('payments',payments);
+}
+
+/* ---------- Session ---------- */
+let SESSION = null;
+let LANG = DB.get('lang','en');
+let CURRENT_PAGE = 'dashboard';
+
+function getUsers(){return DB.get('users',[])}
+function saveUsers(u){DB.set('users',u)}
+function getPayments(){return DB.get('payments',[])}
+function savePayments(p){DB.set('payments',p)}
+function getSettings(){return DB.get('settings',{})}
+function getAudit(){return DB.get('audit',[])}
+function logAudit(action,detail,target){
+  const a=getAudit();
+  a.unshift({id:uid('A'),ts:now(),user:SESSION?SESSION.email:'system',role:SESSION?SESSION.role:'-',action,detail:detail||'',target:target||''});
+  DB.set('audit',a);
+}
+
+/* ---------- Toast ---------- */
+function toast(msg,type){
+  const el=document.createElement('div');
+  el.className='toast '+(type||'');
+  el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},2800);
+}
+
+/* ---------- Modal ---------- */
+function modal(title,bodyHtml,footHtml,size){
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal ${size||''}">
+      <div class="modal-head"><h3>${esc(title)}</h3><button class="x" onclick="closeModal()">×</button></div>
+      <div class="modal-body">${bodyHtml}</div>
+      ${footHtml?`<div class="modal-foot">${footHtml}</div>`:''}
+    </div></div>`;
+}
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+
+/* ============================================================
+   AUTH
+============================================================ */
+function showAuth(which){
+  document.getElementById('tabLogin').classList.toggle('active',which==='login');
+  document.getElementById('tabReg').classList.toggle('active',which==='register');
+  document.getElementById('loginForm').classList.toggle('hidden',which!=='login');
+  document.getElementById('regForm').classList.toggle('hidden',which!=='register');
+}
+function fillRegDept(){
+  const s=getSettings();
+  document.getElementById('rgDept').innerHTML=(s.departments||DEPARTMENTS_DEFAULT).map(d=>`<option>${esc(d)}</option>`).join('');
+}
+function validPassword(p){
+  return p.length>=8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p);
+}
+function authMsg(id,text,cls){document.getElementById(id).innerHTML=text?`<div class="msg ${cls}">${esc(text)}</div>`:'';}
+
+function doRegister(e){
+  e.preventDefault();
+  const name=rgName.value.trim(), email=rgEmail.value.trim().toLowerCase(), dept=rgDept.value,
+        title=rgTitle.value.trim(), mobile=rgMobile.value.trim(), p=rgPass.value, p2=rgPass2.value;
+  if(!email.endsWith('@najm.sa')){authMsg('regMsg','Only Najm corporate emails are allowed.','err');return false;}
+  if(getUsers().some(u=>u.email===email)){authMsg('regMsg','An account with this email already exists.','err');return false;}
+  if(!validPassword(p)){authMsg('regMsg','Password must be 8+ chars with uppercase, lowercase, number & special character.','err');return false;}
+  if(p!==p2){authMsg('regMsg','Passwords do not match.','err');return false;}
+  const users=getUsers();
+  users.push({id:uid('U'),name,email,dept,title,mobile,pass:p,role:"AP User",status:"Pending Admin Approval",photo:"",failed:0,locked:false,created:now(),loginHistory:[]});
+  saveUsers(users);
+  authMsg('regMsg','Registration submitted. Your account is Pending Admin Approval.','ok');
+  document.getElementById('regForm').reset(); fillRegDept();
+  return false;
+}
+
+function doLogin(e){
+  e.preventDefault();
+  const email=liEmail.value.trim().toLowerCase(), p=liPass.value;
+  const users=getUsers();
+  const u=users.find(x=>x.email===email);
+  if(!u){authMsg('loginMsg','Invalid email or password.','err');return false;}
+  if(u.locked){authMsg('loginMsg','Account locked after multiple failed attempts. Contact Admin.','err');return false;}
+  if(u.pass!==p){
+    u.failed=(u.failed||0)+1;
+    if(u.failed>=5){u.locked=true;}
+    u.loginHistory=u.loginHistory||[]; u.loginHistory.unshift({type:'failed',ts:now()});
+    saveUsers(users);
+    authMsg('loginMsg',u.locked?'Account locked after 5 failed attempts. Contact Admin.':`Invalid credentials. ${5-u.failed} attempt(s) left.`,'err');
+    return false;
+  }
+  if(u.status==="Pending Admin Approval"){authMsg('loginMsg','Your account is pending admin approval.','warn');return false;}
+  if(u.status==="Rejected"){authMsg('loginMsg','Your registration was rejected. Contact Admin.','err');return false;}
+  if(u.status!=="Active"){authMsg('loginMsg','Account inactive. Contact Admin.','err');return false;}
+  u.failed=0; u.loginHistory=u.loginHistory||[]; u.loginHistory.unshift({type:'login',ts:now()});
+  saveUsers(users);
+  SESSION=u; DB.set('session',u.email);
+  logAudit('Login','User signed in');
+  enterApp();
+  return false;
+}
+function logout(){
+  if(SESSION){
+    const users=getUsers(); const u=users.find(x=>x.email===SESSION.email);
+    if(u){u.loginHistory=u.loginHistory||[];u.loginHistory.unshift({type:'logout',ts:now()});saveUsers(users);}
+    logAudit('Logout','User signed out');
+  }
+  SESSION=null; DB.set('session',null);
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('authWrap').style.display='flex';
+  document.getElementById('loginForm').reset();
+  authMsg('loginMsg','','');
+}
+
+/* ---------- Access ---------- */
+function canAccess(pageId){
+  const pg=PAGES.find(p=>p.id===pageId); if(!pg)return false;
+  if(pg.roles==='*')return true;
+  return pg.roles.includes(SESSION.role);
+}
+
+/* ============================================================
+   APP SHELL
+============================================================ */
+function enterApp(){
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  const init=SESSION.name.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('topName').textContent=SESSION.name;
+  document.getElementById('topRole').textContent=SESSION.role;
+  const av=document.getElementById('topAvatar');
+  av.innerHTML=SESSION.photo?`<img src="${SESSION.photo}">`:init;
+  buildSidebar();
+  navigate('dashboard');
+}
+
+function buildSidebar(){
+  const secs={};
+  PAGES.filter(p=>canAccess(p.id)).forEach(p=>{(secs[p.sec]=secs[p.sec]||[]).push(p)});
+  let html='';
+  const counts=navCounts();
+  for(const sec in secs){
+    html+=`<div class="nav-sec">${sec}</div>`;
+    secs[sec].forEach(p=>{
+      const c=counts[p.id];
+      html+=`<div class="nav-item" id="nav-${p.id}" onclick="navigate('${p.id}')">
+        <span class="ic">${p.ic}</span><span>${p.t}</span>${c?`<span class="count">${c}</span>`:''}</div>`;
+    });
+  }
+  document.getElementById('sidebar').innerHTML=html;
+}
+function navCounts(){
+  const pays=getPayments();
+  const c={};
+  c.treasury=pays.filter(p=>["Pending","Under Treasury Review"].includes(p.status)).length;
+  c.issues=pays.filter(p=>p.status==="Rejected / Returned by Bank"||p.issue).length;
+  c.bank=pays.filter(p=>p.status==="Uploaded to Bank - Pending Bank Approval Cycle").length;
+  if(SESSION.role==='Admin'||true) c.userapproval=getUsers().filter(u=>u.status==="Pending Admin Approval").length;
+  return c;
+}
+function navigate(pageId){
+  if(!canAccess(pageId)){toast('You do not have access to this page','err');return;}
+  CURRENT_PAGE=pageId;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const nav=document.getElementById('nav-'+pageId); if(nav)nav.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  RENDER[pageId]();
+  document.getElementById('content').scrollTop=0;
+}
+
+/* ---------- generic UI helpers ---------- */
+function pageHead(title,sub,actions){
+  return `<div class="page-head"><div><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:''}</div><div class="actions">${actions||''}</div></div>`;
+}
+function statCard(lbl,val,sub,sm){
+  return `<div class="stat"><div class="lbl">${lbl}</div><div class="val ${sm?'sm':''}">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}<div class="bar"></div></div>`;
+}
+function statusBadge(s){return `<span class="badge ${STATUS_BADGE[s]||'b-grey'}">${esc(s)}</span>`;}
+
+/* ============================================================
+   APPROVAL ROUTE LOGIC
+============================================================ */
+function routeFor(p){
+  const s=getSettings(); const high = Number(p.amount)>=Number(s.threshold||1000000);
+  const isNRNDA = p.ptype==='NRN'||p.ptype==='DA'||p.category==='NRN Payments'||p.category==='DA Payments';
+  let route;
+  if(isNRNDA){ route=["COO Office","CFO"]; if(high)route.push("CEO Office"); }
+  else { route=["Treasury Manager","Head of Revenue & Cash Management","CFO"]; if(high)route.push("CEO Office"); }
+  return route;
+}
+function routeTags(p){
+  const route=routeFor(p);
+  const done=(p.approvals||[]).filter(a=>a.action==='Approve').map(a=>a.roleStep);
+  const curIdx=route.findIndex(r=>!done.includes(r));
+  return `<span class="tag-route">`+route.map((r,i)=>{
+    const cls=done.includes(r)?'done':(i===curIdx?'cur':'');
+    return `<span class="${cls}">${esc(r)}</span>`;
+  }).join('')+`</span>`;
+}
+
+/* ============================================================
+   DUPLICATE DETECTION
+============================================================ */
+function detectDuplicate(row,exclId){
+  const pays=getPayments().filter(p=>p.id!==exclId);
+  for(const p of pays){
+    const high = p.supplier===row.supplier && p.supplierName===row.supplierName &&
+      Number(p.amount)===Number(row.amount) && p.origRef===row.origRef && p.je===row.je && p.company===row.company;
+    if(high) return {risk:'High',match:p};
+  }
+  for(const p of pays){
+    const med = p.supplier===row.supplier && Number(p.amount)===Number(row.amount) && p.origRef===row.origRef;
+    if(med) return {risk:'Medium',match:p};
+  }
+  for(const p of pays){
+    const low = p.supplierName===row.supplierName && Number(p.amount)===Number(row.amount);
+    if(low) return {risk:'Low',match:p};
+  }
+  return null;
+}
+
+/* ============================================================
+   TABLE / EXPORT UTILITIES
+============================================================ */
+function exportCSV(headers,rows,filename){
+  const meta=[
+    ['Report:',filename],['Generated By:',SESSION.name+' ('+SESSION.role+')'],['Generated On:',fmtDateTime(now())],[]
+  ];
+  let csv=meta.map(r=>r.map(csvCell).join(',')).join('\r\n')+'\r\n';
+  csv+=headers.map(csvCell).join(',')+'\r\n';
+  csv+=rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=filename.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('Exported to CSV','ok');
+}
+function csvCell(v){v=String(v==null?'':v);if(/[",\n]/.test(v))return '"'+v.replace(/"/g,'""')+'"';return v;}
+function copyTable(headers,rows){
+  let t=headers.join('\t')+'\n'+rows.map(r=>r.join('\t')).join('\n');
+  navigator.clipboard.writeText(t).then(()=>toast('Table copied — paste into Excel','ok'),()=>toast('Copy failed','err'));
+}
+
+/* ============================================================
+   RENDERERS
+============================================================ */
+const RENDER={};
+
+/* ---------- DASHBOARD ---------- */
+RENDER.dashboard=function(){
+  const pays=getPayments(); const s=getSettings();
+  const total=pays.length;
+  const totalAmt=pays.reduce((a,p)=>a+Number(p.amount||0),0);
+  const pending=pays.filter(p=>p.status==="Pending");
+  const review=pays.filter(p=>p.status==="Under Treasury Review");
+  const bank=pays.filter(p=>p.status==="Uploaded to Bank - Pending Bank Approval Cycle");
+  const approved=pays.filter(p=>p.status==="Approved");
+  const rejected=pays.filter(p=>p.status==="Rejected / Returned by Bank");
+  const dup=pays.filter(p=>p.dupOverride);
+  const high=pays.filter(p=>Number(p.amount)>=Number(s.threshold||1000000));
+  const sum=arr=>arr.reduce((a,p)=>a+Number(p.amount||0),0);
+
+  let html=pageHead('Dashboard','Welcome, '+SESSION.name+' — '+SESSION.role,
+    `<button class="btn" onclick="navigate('reports')">📊 Full Analytics</button>`);
+  html+=`<div class="cards">
+    ${statCard('Total Payments',total,'SAR '+money(totalAmt))}
+    ${statCard('Pending',pending.length,'SAR '+money(sum(pending)))}
+    ${statCard('Under Treasury Review',review.length,'SAR '+money(sum(review)))}
+    ${statCard('Uploaded to Bank',bank.length,'SAR '+money(sum(bank)))}
+    ${statCard('Approved',approved.length,'SAR '+money(sum(approved)))}
+    ${statCard('Rejected / Returned',rejected.length,'SAR '+money(sum(rejected)))}
+    ${statCard('Duplicate Overrides',dup.length,'Flagged for review')}
+    ${statCard('Above SAR 1,000,000',high.length,'High-value approvals')}
+  </div>`;
+
+  // role-specific quick actions
+  html+=`<div class="card pad"><h3 style="margin-bottom:12px">Quick Actions</h3><div class="actions">`;
+  if(canAccess('upload'))html+=`<button class="btn primary" onclick="navigate('upload')">⬆ Upload AP Payments</button>`;
+  if(canAccess('treasury'))html+=`<button class="btn" onclick="navigate('treasury')">⚖ Treasury Review</button>`;
+  if(canAccess('approvals'))html+=`<button class="btn" onclick="navigate('approvals')">✔ Approval Center</button>`;
+  if(canAccess('email'))html+=`<button class="btn" onclick="navigate('email')">✉ Generate Email</button>`;
+  if(canAccess('issues'))html+=`<button class="btn" onclick="navigate('issues')">⚠ Payment Issues</button>`;
+  html+=`<button class="btn" onclick="navigate('current')">≣ Current Payments</button></div></div>`;
+
+  // mini charts
+  html+=`<div class="chart-grid" style="margin-top:18px">
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Payments by Status</h4><canvas id="cStatus" height="220"></canvas></div>
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Amount by Category (SAR)</h4><canvas id="cCat" height="220"></canvas></div>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+
+  drawPie('cStatus',STATUSES.map(st=>({label:st.split(' ')[0],value:pays.filter(p=>p.status===st).length})).filter(x=>x.value));
+  drawBars('cCat',CATEGORIES.map(c=>({label:c.replace(' Payments',''),value:sum(pays.filter(p=>p.category===c))})));
+};
+
+/* ---------- UPLOAD AP ---------- */
+RENDER.upload=function(){
+  let html=pageHead('Upload AP Payments','Paste from SAP Excel or upload CSV. Required: Entered On, Supplier, Supplier Name, Amount, Original Reference Document.');
+  html+=`<div class="card pad">
+    <div class="pillrow">
+      <span class="pill active" id="pillPaste" onclick="uploadMode('paste')">Paste from Excel</span>
+      <span class="pill" id="pillCsv" onclick="uploadMode('csv')">Upload CSV</span>
+    </div>
+    <div id="modePaste">
+      <label>Paste rows (Tab-separated). Columns: Entered On | Supplier | Supplier Name | Company Code | Assignment | JE Date | JE | JE Type | Amount | Original Ref</label>
+      <textarea id="pasteBox" style="min-height:150px;font-family:monospace" placeholder="2026-01-10&#9;50001&#9;Supplier Name&#9;1000&#9;&#9;2026-01-10&#9;490001&#9;KZ&#9;10914.00&#9;5105636215"></textarea>
+    </div>
+    <div id="modeCsv" class="hidden">
+      <label>Choose CSV file</label><input type="file" id="csvFile" accept=".csv,text/csv">
+    </div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn primary" onclick="parseUpload()">Parse Rows</button>
+      <button class="btn" onclick="loadSamplePaste()">Load Sample</button>
+    </div>
+  </div>
+  <div id="uploadResult" style="margin-top:18px"></div>`;
+  document.getElementById('content').innerHTML=html;
+  window._draftRows=[];
+};
+function uploadMode(m){
+  document.getElementById('pillPaste').classList.toggle('active',m==='paste');
+  document.getElementById('pillCsv').classList.toggle('active',m==='csv');
+  document.getElementById('modePaste').classList.toggle('hidden',m!=='paste');
+  document.getElementById('modeCsv').classList.toggle('hidden',m!=='csv');
+}
+function loadSamplePaste(){
+  document.getElementById('pasteBox').value=
+`2026-01-10\t50010\tNew Supplier Co\t1000\t\t2026-01-10\t490100\tKZ\t12500.00\t5105699001
+2026-01-10\t50011\tعميل تجريبي للمدفوعات\t1000\t\t2026-01-10\t490101\tKZ\t1250000.00\t5105699002`;
+  uploadMode('paste');
+}
+function parseUpload(){
+  const csvActive=document.getElementById('pillCsv').classList.contains('active');
+  if(csvActive){
+    const f=document.getElementById('csvFile').files[0];
+    if(!f){toast('Choose a CSV file','warn');return;}
+    const r=new FileReader();
+    r.onload=e=>processRows(e.target.result,',');
+    r.readAsText(f);
+  }else{
+    const txt=document.getElementById('pasteBox').value;
+    if(!txt.trim()){toast('Paste some rows first','warn');return;}
+    processRows(txt,'\t');
+  }
+}
+function processRows(text,delim){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(!lines.length){toast('No rows found','warn');return;}
+  // detect header
+  let start=0;
+  if(/supplier/i.test(lines[0])&&/amount|reference/i.test(lines[0])) start=1;
+  const rows=[]; const errors=[];
+  for(let i=start;i<lines.length;i++){
+    let cells=lines[i].split(delim).map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cells.every(c=>c==='')) continue;
+    const row={
+      enteredOn:cells[0]||'', supplier:cells[1]||'', supplierName:cells[2]||'',
+      company:cells[3]||'1000', assignment:cells[4]||'', jeDate:cells[5]||'',
+      je:cells[6]||'', jeType:cells[7]||'', amount:parseFloat((cells[8]||'').replace(/,/g,''))||0,
+      origRef:cells[9]||''
+    };
+    const miss=[];
+    if(!row.enteredOn)miss.push('Entered On');
+    if(!row.supplier)miss.push('Supplier');
+    if(!row.supplierName)miss.push('Supplier Name');
+    if(!row.amount||isNaN(row.amount))miss.push('Amount');
+    if(!row.origRef)miss.push('Original Reference');
+    row._errors=miss; row._dup=detectDuplicate(row);
+    rows.push(row); if(miss.length)errors.push('Row '+(i+1)+': missing '+miss.join(', '));
+  }
+  window._draftRows=rows;
+  renderUploadResult(rows,errors);
+}
+function renderUploadResult(rows,errors){
+  const valid=rows.filter(r=>!r._errors.length).length;
+  const dups=rows.filter(r=>r._dup).length;
+  let h=`<div class="card pad">
+    <div class="cards" style="margin-bottom:6px">
+      ${statCard('Parsed Rows',rows.length,'')}
+      ${statCard('Valid',valid,'Ready to submit')}
+      ${statCard('With Errors',rows.length-valid,'Fix before submit')}
+      ${statCard('Duplicate Warnings',dups,'Review carefully')}
+    </div>`;
+  if(errors.length) h+=`<div class="msg err">${errors.map(esc).join('<br>')}</div>`;
+  h+=`<div class="tbl-wrap"><table><thead><tr>
+    <th>#</th><th>Entered On</th><th>Supplier</th><th>Supplier Name</th><th>Company</th><th class="right">Amount</th><th>Original Ref</th><th>Duplicate</th><th>Status</th></tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    const ok=!r._errors.length;
+    h+=`<tr>
+      <td>${i+1}</td><td>${esc(r.enteredOn)}</td><td>${esc(r.supplier)}</td><td>${esc(r.supplierName)}</td>
+      <td>${esc(r.company)}</td><td class="right mono">${money(r.amount)}</td><td>${esc(r.origRef)}</td>
+      <td>${r._dup?`<span class="badge ${r._dup.risk==='High'?'b-red':r._dup.risk==='Medium'?'b-amber':'b-grey'}">${r._dup.risk} Risk</span>`:'<span class="muted">—</span>'}</td>
+      <td>${ok?'<span class="badge b-green">Valid</span>':`<span class="badge b-red">${esc(r._errors.join(', '))}</span>`}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn primary" onclick="submitBatch()" ${valid?'':'disabled'}>Submit Batch to Treasury (${valid} valid)</button>
+      <button class="btn" onclick="navigate('upload')">Clear</button>
+    </div></div>`;
+  document.getElementById('uploadResult').innerHTML=h;
+}
+function submitBatch(){
+  const rows=(window._draftRows||[]).filter(r=>!r._errors.length);
+  if(!rows.length){toast('No valid rows','warn');return;}
+  const highDups=rows.filter(r=>r._dup&&r._dup.risk==='High');
+  const proceed=(justification)=>{
+    const batch=uid('B'); const pays=getPayments();
+    rows.forEach(r=>{
+      const dupOverride=!!r._dup;
+      pays.push({
+        id:uid('PAY'),batch,enteredOn:r.enteredOn,supplier:r.supplier,supplierName:r.supplierName,
+        company:r.company,assignment:r.assignment,jeDate:r.jeDate,je:r.je,jeType:r.jeType,
+        amount:r.amount,origRef:r.origRef,category:guessCategory(r),ptype:'Standard',bank:'',
+        refNo:r.origRef,shortDesc:'',status:'Pending',stage:'AP Submitted',
+        createdBy:SESSION.email,created:now(),modBy:SESSION.email,mod:now(),notes:'',
+        dupOverride,dupRisk:r._dup?r._dup.risk:null,
+        history:[{u:SESSION.email,d:now(),from:'-',to:'Pending',c:'AP batch submitted'}],
+        approvals:[],issue:null
+      });
+      if(dupOverride) logAudit('Duplicate Override','Risk '+r._dup.risk+' | Justification: '+(justification||'(submitted)'),r.supplierName);
+    });
+    savePayments(pays);
+    logAudit('AP Batch Submitted',rows.length+' payment(s), Batch '+batch);
+    toast('Batch submitted to Treasury','ok');
+    buildSidebar(); navigate('apbatch');
+  };
+  if(highDups.length){
+    modal('Duplicate Payment Warning',
+      `<div class="msg warn">Warning: A matching payment already exists. Please validate before proceeding to avoid duplicate payment.</div>
+       <p>${highDups.length} row(s) match existing payments at <b>High Risk</b>. Provide a justification to continue. It will be saved to the Audit Log and flagged as a Duplicate Override.</p>
+       <div class="field" style="margin-top:10px"><label>Justification (required)</label><textarea id="dupJust" placeholder="Explain why this is not a duplicate..."></textarea></div>`,
+      `<button class="btn" onclick="closeModal()">Cancel Upload</button>
+       <button class="btn primary" onclick="(function(){var j=document.getElementById('dupJust').value.trim();if(!j){toast('Justification required','warn');return;}closeModal();window.__dupProceed(j);})()">Continue with Justification</button>`);
+    window.__dupProceed=proceed;
+  }else proceed();
+}
+function guessCategory(r){
+  const n=(r.supplierName||'').toLowerCase();
+  if(/sadad|energy|ministry/.test(n))return 'SADAD Payments';
+  return 'Local Payments';
+}
+
+/* ---------- AP BATCH REVIEW ---------- */
+RENDER.apbatch=function(){
+  let pays=getPayments();
+  if(SESSION.role==='AP User') pays=pays.filter(p=>p.createdBy===SESSION.email);
+  const batches={};
+  pays.forEach(p=>{(batches[p.batch]=batches[p.batch]||[]).push(p)});
+  let html=pageHead('AP Batch Review','Review batches before they advance through Treasury.');
+  if(!Object.keys(batches).length){html+=`<div class="card pad empty">No batches found.</div>`;document.getElementById('content').innerHTML=html;return;}
+  html+=`<div class="cards">`;
+  for(const b in batches){
+    const arr=batches[b]; const amt=arr.reduce((a,p)=>a+Number(p.amount),0);
+    const pend=arr.filter(p=>p.status==='Pending').length;
+    html+=`<div class="stat"><div class="lbl">Batch ${esc(b)}</div>
+      <div class="val sm">${arr.length} payments</div>
+      <div class="sub">SAR ${money(amt)} • ${pend} pending</div>
+      <div class="actions" style="margin-top:10px"><button class="btn sm" onclick="navigate('current')">View in Payments</button></div></div>`;
+  }
+  html+=`</div>`;
+  // table
+  const cols=[['Payment ID','id'],['Batch','batch'],['Supplier Name','supplierName'],['Amount','amount'],['Original Ref','origRef'],['Category','category'],['Status','status'],['Created By','createdBy']];
+  html+=tableBlock('apbatchTbl',cols,pays,{
+    money:['amount'], badge:['status'],
+    rowActions:SESSION.role!=='AP User'?null:null
+  });
+  document.getElementById('content').innerHTML=html;
+  wireTable('apbatchTbl',cols,pays,{money:['amount']});
+};
+
+/* ---------- Generic table block ---------- */
+function tableBlock(tid,cols,data,opts){
+  opts=opts||{};
+  return `<div class="card pad">
+    <div class="toolbar">
+      <input placeholder="Search..." oninput="window._tblSearch_${tid}=this.value;reRenderTable('${tid}')" style="min-width:220px">
+      ${opts.filters||''}
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="tblCopy_${tid}()">⧉ Copy to Excel</button>
+      <button class="btn sm" onclick="tblCsv_${tid}()">⬇ Export CSV</button>
+      ${opts.extraActions||''}
+    </div>
+    <div class="tbl-wrap"><table id="${tid}"></table></div>
+    <div class="muted" style="margin-top:8px;font-size:11.5px" id="${tid}_count"></div>
+  </div>`;
+}
+function wireTable(tid,cols,data,opts){
+  opts=opts||{};
+  window['_tblData_'+tid]=data;
+  window['_tblCols_'+tid]=cols;
+  window['_tblOpts_'+tid]=opts;
+  window['_tblSort_'+tid]={key:null,dir:1};
+  window['reRenderTable']=window['reRenderTable']||function(id){ _renderTableNow(id); };
+  window['tblCopy_'+tid]=function(){const {h,r}=tblMatrix(tid);copyTable(h,r);};
+  window['tblCsv_'+tid]=function(){const {h,r}=tblMatrix(tid);exportCSV(h,r,PAGES.find(p=>p.id===CURRENT_PAGE).t);};
+  _renderTableNow(tid);
+}
+function tblMatrix(tid){
+  const cols=window['_tblCols_'+tid]; const rows=tblFiltered(tid);
+  const h=cols.map(c=>c[0]);
+  const opts=window['_tblOpts_'+tid];
+  const r=rows.map(row=>cols.map(c=>{
+    let v=row[c[1]];
+    if(opts.money&&opts.money.includes(c[1]))return money(v);
+    if(/date|created|mod|enteredOn|jeDate|ts/i.test(c[1])&&v)return fmtDate(v);
+    return v==null?'':String(v);
+  }));
+  return {h,r};
+}
+function tblFiltered(tid){
+  let data=window['_tblData_'+tid].slice();
+  const q=(window['_tblSearch_'+tid]||'').toLowerCase().trim();
+  if(q)data=data.filter(row=>Object.values(row).some(v=>String(v).toLowerCase().includes(q)));
+  const s=window['_tblSort_'+tid];
+  if(s&&s.key){data.sort((a,b)=>{let x=a[s.key],y=b[s.key];if(typeof x==='number'||!isNaN(parseFloat(x))&&!isNaN(parseFloat(y))){x=parseFloat(x)||0;y=parseFloat(y)||0;}return (x>y?1:x<y?-1:0)*s.dir;});}
+  return data;
+}
+function _renderTableNow(tid){
+  const cols=window['_tblCols_'+tid]; const opts=window['_tblOpts_'+tid]||{};
+  const data=tblFiltered(tid);
+  const tbl=document.getElementById(tid); if(!tbl)return;
+  let h='<thead><tr>';
+  if(opts.checkbox)h+=`<th style="width:34px"><input type="checkbox" class="chk" onchange="tblToggleAll('${tid}',this.checked)"></th>`;
+  cols.forEach(c=>{h+=`<th onclick="tblSort('${tid}','${c[1]}')">${esc(c[0])}</th>`});
+  if(opts.actionsHeader)h+=`<th>Actions</th>`;
+  h+='</tr></thead><tbody>';
+  if(!data.length)h+=`<tr><td colspan="99" class="empty">No records found.</td></tr>`;
+  data.forEach(row=>{
+    const selected=opts.checkbox&&window['_tblSel_'+tid]&&window['_tblSel_'+tid].has(row.id);
+    h+=`<tr class="${selected?'sel':''}">`;
+    if(opts.checkbox)h+=`<td><input type="checkbox" class="chk" ${selected?'checked':''} onchange="tblToggleRow('${tid}','${row.id}',this.checked)"></td>`;
+    cols.forEach(c=>{
+      let v=row[c[1]];
+      if(opts.money&&opts.money.includes(c[1]))h+=`<td class="right mono">${money(v)}</td>`;
+      else if(opts.badge&&opts.badge.includes(c[1]))h+=`<td>${statusBadge(v)}</td>`;
+      else if(/date$|created$|^mod$|enteredOn|jeDate|^ts$/i.test(c[1])&&v)h+=`<td>${fmtDate(v)}</td>`;
+      else h+=`<td>${esc(v==null?'':v)}</td>`;
+    });
+    if(opts.actionsHeader)h+=`<td>${opts.rowActions?opts.rowActions(row):''}</td>`;
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  tbl.innerHTML=h;
+  const cnt=document.getElementById(tid+'_count'); if(cnt)cnt.textContent=data.length+' record(s)';
+}
+function tblSort(tid,key){const s=window['_tblSort_'+tid];if(s.key===key)s.dir*=-1;else{s.key=key;s.dir=1;}_renderTableNow(tid);}
+function tblToggleRow(tid,id,on){window['_tblSel_'+tid]=window['_tblSel_'+tid]||new Set();if(on)window['_tblSel_'+tid].add(id);else window['_tblSel_'+tid].delete(id);_renderTableNow(tid);if(window['_tblOnSel_'+tid])window['_tblOnSel_'+tid]();}
+function tblToggleAll(tid,on){window['_tblSel_'+tid]=window['_tblSel_'+tid]||new Set();const d=tblFiltered(tid);if(on)d.forEach(r=>window['_tblSel_'+tid].add(r.id));else window['_tblSel_'+tid].clear();_renderTableNow(tid);if(window['_tblOnSel_'+tid])window['_tblOnSel_'+tid]();}
+function tblSelected(tid){return Array.from(window['_tblSel_'+tid]||[]);}
+
+/* ---------- CURRENT PAYMENTS ---------- */
+RENDER.current=function(){
+  let pays=getPayments();
+  if(SESSION.role==='AP User')pays=pays.filter(p=>p.createdBy===SESSION.email);
+  const s=getSettings();
+  const sum=arr=>arr.reduce((a,p)=>a+Number(p.amount||0),0);
+  let html=pageHead('Current Payments','All active payments. Filter, edit, change status, and export.');
+  html+=`<div class="cards">
+    ${statCard('Total',pays.length,'SAR '+money(sum(pays)))}
+    ${statCard('Pending',pays.filter(p=>p.status==='Pending').length,'SAR '+money(sum(pays.filter(p=>p.status==='Pending'))))}
+    ${statCard('Uploaded to Bank',pays.filter(p=>p.status.includes('Uploaded')).length,'SAR '+money(sum(pays.filter(p=>p.status.includes('Uploaded')))))}
+    ${statCard('Rejected',pays.filter(p=>p.status.includes('Rejected')).length,'SAR '+money(sum(pays.filter(p=>p.status.includes('Rejected')))))}
+    ${statCard('Duplicate Warnings',pays.filter(p=>p.dupOverride).length,'')}
+    ${statCard('Above SAR 1M',pays.filter(p=>Number(p.amount)>=Number(s.threshold||1000000)).length,'')}
+  </div>`;
+  const cols=[['Payment ID','id'],['Batch','batch'],['Supplier','supplier'],['Supplier Name','supplierName'],['Amount','amount'],['Original Ref','origRef'],['Category','category'],['Type','ptype'],['Bank','bank'],['Status','status'],['Created By','createdBy']];
+  const filters=`
+    <select onchange="window._fStatus=this.value;reRenderTable('curTbl')"><option value="">All Status</option>${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
+    <select onchange="window._fCat=this.value;reRenderTable('curTbl')"><option value="">All Category</option>${CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select>
+    <select onchange="window._fBank=this.value;reRenderTable('curTbl')"><option value="">All Bank</option>${BANKS.map(b=>`<option>${b}</option>`).join('')}</select>`;
+  html+=tableBlock('curTbl',cols,pays,{money:['amount'],badge:['status'],filters,checkbox:true,actionsHeader:true,extraActions:`<button class="btn sm" onclick="exportSelected('curTbl')">Export Selected</button>`});
+  document.getElementById('content').innerHTML=html;
+  window._fStatus=window._fCat=window._fBank='';
+  wireTable('curTbl',cols,pays,{money:['amount'],badge:['status'],checkbox:true,actionsHeader:true,rowActions:p=>`
+    <button class="btn sm" onclick="openPayment('${p.id}')">Open</button>`});
+  // custom filter override
+  const baseFiltered=tblFiltered;
+  window['_tblData_curTbl']=pays;
+  patchFilter('curTbl',row=>{
+    if(window._fStatus&&row.status!==window._fStatus)return false;
+    if(window._fCat&&row.category!==window._fCat)return false;
+    if(window._fBank&&row.bank!==window._fBank)return false;
+    return true;
+  });
+};
+function patchFilter(tid,fn){
+  const orig=window['_tblData_'+tid];
+  Object.defineProperty(window,'_tblData_'+tid+'_src',{value:orig,writable:true,configurable:true});
+  window['_extraFilter_'+tid]=fn;
+  // wrap tblFiltered usage by re-defining data getter through reRender
+  const realRender=_renderTableNow;
+  // simpler: monkeypatch tblFiltered for this tid via global hook
+  _renderTableNow(tid);
+}
+/* extend tblFiltered to honor extra filters */
+const _origTblFiltered=tblFiltered;
+tblFiltered=function(tid){
+  let data=_origTblFiltered(tid);
+  const ef=window['_extraFilter_'+tid];
+  if(ef)data=data.filter(ef);
+  return data;
+};
+function exportSelected(tid){
+  const sel=tblSelected(tid); if(!sel.length){toast('Select rows first','warn');return;}
+  const cols=window['_tblCols_'+tid]; const data=window['_tblData_'+tid].filter(r=>sel.includes(r.id));
+  const h=cols.map(c=>c[0]);
+  const r=data.map(row=>cols.map(c=>{let v=row[c[1]];if((window['_tblOpts_'+tid].money||[]).includes(c[1]))return money(v);return v==null?'':v;}));
+  exportCSV(h,r,'Selected Payments');
+}
+
+/* ---------- PAYMENT DETAIL / EDIT ---------- */
+function openPayment(id){
+  const p=getPayments().find(x=>x.id===id); if(!p)return;
+  const s=getSettings();
+  const canEdit = SESSION.role==='Admin' ||
+    (['Treasury User','Treasury Manager'].includes(SESSION.role)) ||
+    (SESSION.role.startsWith('AP') && p.status==='Pending') ||
+    (SESSION.role==='AP User'&&p.createdBy===SESSION.email&&p.status==='Pending');
+  const body=`
+    <div class="kv">
+      <div>Payment ID</div><div>${esc(p.id)}</div>
+      <div>Batch ID</div><div>${esc(p.batch)}</div>
+      <div>Supplier</div><div>${esc(p.supplier)} — ${esc(p.supplierName)}</div>
+      <div>Company Code</div><div>${esc(p.company)}</div>
+      <div>Journal Entry</div><div>${esc(p.je)} (${esc(p.jeType)})</div>
+      <div>Original Reference</div><div>${esc(p.origRef)}</div>
+      <div>Status</div><div>${statusBadge(p.status)}</div>
+      <div>Approval Route</div><div>${routeTags(p)}</div>
+      <div>Created</div><div>${esc(p.createdBy)} • ${fmtDateTime(p.created)}</div>
+      <div>Last Modified</div><div>${esc(p.modBy)} • ${fmtDateTime(p.mod)}</div>
+      ${p.dupOverride?`<div>Duplicate</div><div><span class="badge b-amber">${esc(p.dupRisk)} Risk Override</span></div>`:''}
+    </div>
+    <div class="section-title">Editable Fields</div>
+    <div class="grid2">
+      <div class="field"><label>Amount (SAR)</label><input id="ePamt" type="number" step="0.01" value="${p.amount}" ${canEdit?'':'disabled'}></div>
+      <div class="field"><label>Payment Category</label><select id="ePcat" ${canEdit?'':'disabled'}>${(s.categories||CATEGORIES).map(c=>`<option ${c===p.category?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Payment Type</label><select id="ePtype" ${canEdit?'':'disabled'}>${(s.types||PTYPES).map(c=>`<option ${c===p.ptype?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Bank</label><select id="ePbank" ${canEdit?'':'disabled'}><option value="">—</option>${(s.banks||BANKS).map(c=>`<option ${c===p.bank?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Ref Number</label><input id="ePref" value="${esc(p.refNo)}" ${canEdit?'':'disabled'}></div>
+      <div class="field"><label>Short Description</label><input id="ePdesc" value="${esc(p.shortDesc)}" ${canEdit?'':'disabled'}></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="ePnotes" ${canEdit?'':'disabled'}>${esc(p.notes)}</textarea></div>
+    <div class="section-title">Status History</div>
+    <div class="tbl-wrap" style="max-height:180px"><table><thead><tr><th>When</th><th>User</th><th>From</th><th>To</th><th>Comment</th></tr></thead><tbody>
+      ${(p.history||[]).map(h=>`<tr><td>${fmtDateTime(h.d)}</td><td>${esc(h.u)}</td><td>${esc(h.from)}</td><td>${esc(h.to)}</td><td>${esc(h.c)}</td></tr>`).join('')}
+    </tbody></table></div>
+  `;
+  let foot=`<button class="btn" onclick="closeModal()">Close</button>`;
+  if(canEdit)foot+=`<button class="btn primary" onclick="savePayment('${id}')">Save Changes</button>`;
+  foot+=`<button class="btn" onclick="changeStatusDialog('${id}')">Change Status</button>`;
+  modal('Payment '+p.id,body,foot,'lg');
+}
+function savePayment(id){
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  p.amount=parseFloat(document.getElementById('ePamt').value)||0;
+  p.category=ePcat.value; p.ptype=ePtype.value; p.bank=ePbank.value;
+  p.refNo=ePref.value; p.shortDesc=ePdesc.value; p.notes=ePnotes.value;
+  p.modBy=SESSION.email; p.mod=now();
+  savePayments(pays); logAudit('Payment Edited',id);
+  closeModal(); toast('Payment updated','ok'); RENDER[CURRENT_PAGE]();
+}
+function changeStatusDialog(id){
+  const p=getPayments().find(x=>x.id===id);
+  modal('Change Status — '+id,
+    `<div class="field"><label>New Status</label><select id="csNew">${STATUSES.map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select></div>
+     <div class="field"><label>Comment</label><textarea id="csComment" placeholder="Reason / note for this change"></textarea></div>`,
+    `<button class="btn" onclick="openPayment('${id}')">Back</button>
+     <button class="btn primary" onclick="applyStatus('${id}')">Apply</button>`);
+}
+function applyStatus(id){
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  const newS=document.getElementById('csNew').value; const c=document.getElementById('csComment').value;
+  if(newS===p.status){toast('No change','warn');return;}
+  const old=p.status; p.status=newS; p.modBy=SESSION.email; p.mod=now();
+  p.history=p.history||[]; p.history.unshift({u:SESSION.email,d:now(),from:old,to:newS,c:c||''});
+  savePayments(pays);
+  logAudit('Status Change',id+': '+old+' → '+newS+(c?' | '+c:''));
+  if(newS==="Rejected / Returned by Bank"){ closeModal(); buildSidebar(); openIssueDialog(id); return; }
+  closeModal(); buildSidebar(); toast('Status updated','ok'); RENDER[CURRENT_PAGE]();
+}
+
+/* ---------- TREASURY REVIEW ---------- */
+RENDER.treasury=function(){
+  const pays=getPayments().filter(p=>["Pending","Under Treasury Review"].includes(p.status));
+  let html=pageHead('Treasury Review','Review AP payments, assign bank/category/type, then advance to Approval or Bank.');
+  const cols=[['Payment ID','id'],['Supplier Name','supplierName'],['Amount','amount'],['Original Ref','origRef'],['Category','category'],['Type','ptype'],['Bank','bank'],['Status','status']];
+  html+=tableBlock('trTbl',cols,pays,{money:['amount'],badge:['status'],checkbox:true,actionsHeader:true,
+    extraActions:`
+      <button class="btn sm" onclick="bulkTreasury('bank')">↳ Assign Bank</button>
+      <button class="btn sm" onclick="bulkTreasury('cat')">↳ Assign Category</button>
+      <button class="btn sm primary" onclick="bulkTreasury('review')">Mark Under Review</button>
+      <button class="btn sm secondary" onclick="bulkTreasury('upload')">Mark Uploaded to Bank</button>
+      <button class="btn sm" onclick="bulkTreasury('approval')">Send to Approval</button>`});
+  document.getElementById('content').innerHTML=html;
+  wireTable('trTbl',cols,pays,{money:['amount'],badge:['status'],checkbox:true,actionsHeader:true,rowActions:p=>`<button class="btn sm" onclick="openPayment('${p.id}')">Open</button>`});
+};
+function bulkTreasury(action){
+  const sel=tblSelected('trTbl'); if(!sel.length){toast('Select payments first','warn');return;}
+  const pays=getPayments(); const s=getSettings();
+  const apply=(fn,label)=>{sel.forEach(id=>{const p=pays.find(x=>x.id===id);if(p){fn(p);p.modBy=SESSION.email;p.mod=now();}});savePayments(pays);logAudit('Treasury '+label,sel.length+' payment(s)');buildSidebar();toast(label+' done','ok');navigate('treasury');};
+  if(action==='bank'){
+    modal('Assign Bank',`<div class="field"><label>Bank</label><select id="bkSel">${(s.banks||BANKS).map(b=>`<option>${b}</option>`).join('')}</select></div>`,
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="(function(){var v=document.getElementById('bkSel').value;closeModal();window.__bulk(function(p){p.bank=v;},'Assign Bank');})()">Apply</button>`);
+    window.__bulk=apply; return;
+  }
+  if(action==='cat'){
+    modal('Assign Category',`<div class="field"><label>Category</label><select id="ctSel">${(s.categories||CATEGORIES).map(b=>`<option>${b}</option>`).join('')}</select></div>`,
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="(function(){var v=document.getElementById('ctSel').value;closeModal();window.__bulk(function(p){p.category=v;},'Assign Category');})()">Apply</button>`);
+    window.__bulk=apply; return;
+  }
+  if(action==='review')apply(p=>{const o=p.status;p.status='Under Treasury Review';p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Treasury review'});},'Mark Under Review');
+  if(action==='upload')apply(p=>{const o=p.status;p.status='Uploaded to Bank - Pending Bank Approval Cycle';p.uploadedBy=SESSION.email;p.uploadDate=now();p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Uploaded to bank'});},'Mark Uploaded to Bank');
+  if(action==='approval')apply(p=>{const o=p.status;p.status='Under Treasury Review';p.stage='In Approval';p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Sent to approval center'});},'Send to Approval');
+}
+
+/* ---------- APPROVAL CENTER ---------- */
+RENDER.approvals=function(){
+  const all=getPayments();
+  // payments needing this user's approval
+  const mine=all.filter(p=>{
+    if(["Approved","Cancelled","Rejected / Returned by Bank"].includes(p.status))return false;
+    const route=routeFor(p);
+    const done=(p.approvals||[]).filter(a=>a.action==='Approve').map(a=>a.roleStep);
+    const next=route.find(r=>!done.includes(r));
+    return next===SESSION.role || SESSION.role==='Admin';
+  });
+  let html=pageHead('Approval Center','Payments awaiting your approval based on amount and type routing.');
+  if(SESSION.role==='Admin')html+=`<div class="msg ok">Admin view: showing all payments currently in an approval cycle.</div>`;
+  const list=SESSION.role==='Admin'?all.filter(p=>!["Approved","Cancelled"].includes(p.status)):mine;
+  if(!list.length){html+=`<div class="card pad empty">No payments awaiting your approval.</div>`;document.getElementById('content').innerHTML=html;return;}
+  html+=`<div class="cards">`;
+  list.forEach(p=>{
+    html+=`<div class="stat">
+      <div class="lbl">${esc(p.id)} • ${esc(p.ptype)}</div>
+      <div class="val sm">${esc(p.supplierName)}</div>
+      <div class="sub">SAR ${money(p.amount)} • ${esc(p.category)}</div>
+      <div style="margin:10px 0">${routeTags(p)}</div>
+      <div class="actions">
+        <button class="btn sm secondary" onclick="approveAction('${p.id}','Approve')">Approve</button>
+        <button class="btn sm danger" onclick="approveAction('${p.id}','Reject')">Reject</button>
+        <button class="btn sm" onclick="approveAction('${p.id}','Return')">Return</button>
+        <button class="btn sm" onclick="openPayment('${p.id}')">Details</button>
+      </div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+};
+function approveAction(id,action){
+  modal(action+' Payment — '+id,
+    `<div class="field"><label>Comment ${action!=='Approve'?'(required)':'(optional)'}</label><textarea id="apComment"></textarea></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button>
+     <button class="btn ${action==='Approve'?'secondary':'danger'}" onclick="doApprove('${id}','${action}')">${action}</button>`);
+}
+function doApprove(id,action){
+  const c=document.getElementById('apComment').value.trim();
+  if(action!=='Approve'&&!c){toast('Comment required','warn');return;}
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  const route=routeFor(p);
+  const done=(p.approvals||[]).filter(a=>a.action==='Approve').map(a=>a.roleStep);
+  const step=SESSION.role==='Admin'?(route.find(r=>!done.includes(r))||route[0]):SESSION.role;
+  p.approvals=p.approvals||[];
+  p.approvals.push({roleStep:step,by:SESSION.name,role:SESSION.role,action,comment:c,ts:now()});
+  if(action==='Approve'){
+    const newDone=done.concat([step]);
+    const complete=route.every(r=>newDone.includes(r));
+    if(complete){const o=p.status;p.status='Approved';p.history.unshift({u:SESSION.email,d:now(),from:o,to:'Approved',c:'Final approval'});}
+    logAudit('Approval',id+' approved at '+step);
+  }else if(action==='Reject'){
+    const o=p.status;p.status='Rejected / Returned by Bank';p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Rejected by '+step+': '+c});
+    logAudit('Approval Reject',id+' by '+step);
+    p.modBy=SESSION.email;p.mod=now();savePayments(pays);closeModal();buildSidebar();openIssueDialog(id);return;
+  }else{
+    const o=p.status;p.status='Pending';p.stage='Returned for clarification';p.history.unshift({u:SESSION.email,d:now(),from:o,to:'Pending',c:'Returned: '+c});
+    logAudit('Approval Return',id+' by '+step);
+  }
+  p.modBy=SESSION.email;p.mod=now();
+  savePayments(pays); buildSidebar(); closeModal(); toast(action+' recorded','ok'); navigate('approvals');
+}
+
+/* ---------- BANK UPLOADED ---------- */
+RENDER.bank=function(){
+  const pays=getPayments().filter(p=>p.status==="Uploaded to Bank - Pending Bank Approval Cycle");
+  let html=pageHead('Bank Uploaded Payments','Payments uploaded to the bank, pending the bank approval cycle.');
+  const data=pays.map(p=>({...p,approvalStatus:bankApprovalStatus(p),uploadDate:p.uploadDate||p.mod,uploadedBy:p.uploadedBy||p.modBy}));
+  const cols=[['Payment ID','id'],['Supplier Name','supplierName'],['Amount','amount'],['Bank','bank'],['Ref Number','refNo'],['Original Ref','origRef'],['Upload Date','uploadDate'],['Uploaded By','uploadedBy'],['Approval Status','approvalStatus']];
+  html+=tableBlock('bankTbl',cols,data,{money:['amount'],actionsHeader:true});
+  document.getElementById('content').innerHTML=html;
+  wireTable('bankTbl',cols,data,{money:['amount'],actionsHeader:true,rowActions:p=>`
+    <button class="btn sm" onclick="openPayment('${p.id}')">Open</button>
+    <button class="btn sm danger" onclick="markReturned('${p.id}')">Mark Returned</button>`});
+};
+function bankApprovalStatus(p){
+  const route=routeFor(p);
+  const done=(p.approvals||[]).filter(a=>a.action==='Approve').map(a=>a.roleStep);
+  const next=route.find(r=>!done.includes(r));
+  if(!next)return "Approved";
+  return "Pending "+next;
+}
+function markReturned(id){openIssueDialog(id,true);}
+
+/* ---------- PAYMENT ISSUES ---------- */
+function openIssueDialog(id,fromBank){
+  const p=getPayments().find(x=>x.id===id);
+  const s=getSettings();
+  modal('Payment Issue — '+id,
+    `<div class="msg warn">This payment is being moved to Payment Issues.</div>
+     <div class="grid2">
+      <div class="field"><label>Rejection Reason</label><input id="isReason" placeholder="e.g. Invalid IBAN"></div>
+      <div class="field"><label>Action Owner</label><input id="isOwner" placeholder="Responsible person"></div>
+      <div class="field"><label>Expected Resolution Date</label><input id="isDate" type="date"></div>
+      <div class="field"><label>Responsible Department</label><select id="isDept">${(s.departments||DEPARTMENTS_DEFAULT).map(d=>`<option>${d}</option>`).join('')}</select></div>
+     </div>
+     <div class="field"><label>Corrective Action</label><textarea id="isAction"></textarea></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button>
+     <button class="btn primary" onclick="saveIssue('${id}',${fromBank?true:false})">Save Issue</button>`);
+}
+function saveIssue(id,fromBank){
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  if(fromBank){const o=p.status;p.status='Rejected / Returned by Bank';p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Returned by bank'});}
+  p.issue={
+    reason:isReason.value,owner:isOwner.value,expected:isDate.value,
+    dept:isDept.value,action:isAction.value,status:'Open',opened:now(),comments:[]
+  };
+  p.modBy=SESSION.email;p.mod=now();
+  savePayments(pays); logAudit('Payment Issue Opened',id+': '+isReason.value);
+  closeModal(); buildSidebar(); toast('Issue logged','ok'); navigate('issues');
+}
+RENDER.issues=function(){
+  const pays=getPayments().filter(p=>p.issue||p.status==="Rejected / Returned by Bank");
+  const sum=arr=>arr.reduce((a,p)=>a+Number(p.amount||0),0);
+  const reasons={}; pays.forEach(p=>{const r=(p.issue&&p.issue.reason)||'Unspecified';reasons[r]=(reasons[r]||0)+1;});
+  const topReason=Object.entries(reasons).sort((a,b)=>b[1]-a[1])[0];
+  const days=p=>p.issue&&p.issue.opened?Math.floor((Date.now()-new Date(p.issue.opened))/86400000):0;
+  const avg=pays.length?Math.round(pays.reduce((a,p)=>a+days(p),0)/pays.length):0;
+  let html=pageHead('Payment Issues','Rejected or returned payments and their resolution tracking.');
+  html+=`<div class="cards">
+    ${statCard('Total Rejected',pays.length,'SAR '+money(sum(pays)))}
+    ${statCard('Open Issues',pays.filter(p=>!p.issue||p.issue.status==='Open').length,'')}
+    ${statCard('Avg Resolution (days)',avg,'')}
+    ${statCard('Top Reason',topReason?topReason[0]:'—',topReason?topReason[1]+' case(s)':'',true)}
+  </div>`;
+  const data=pays.map(p=>({...p,
+    reason:p.issue?p.issue.reason:'',owner:p.issue?p.issue.owner:'',expected:p.issue?p.issue.expected:'',
+    daysOut:days(p),issueStatus:p.issue?p.issue.status:'Open',dept:p.issue?p.issue.dept:''}));
+  const cols=[['Payment ID','id'],['Supplier Name','supplierName'],['Amount','amount'],['Bank','bank'],['Original Ref','origRef'],['Rejection Reason','reason'],['Action Owner','owner'],['Expected','expected'],['Days Out','daysOut'],['Issue Status','issueStatus'],['Department','dept']];
+  html+=tableBlock('issTbl',cols,data,{money:['amount'],actionsHeader:true});
+  document.getElementById('content').innerHTML=html;
+  wireTable('issTbl',cols,data,{money:['amount'],actionsHeader:true,rowActions:p=>`<button class="btn sm" onclick="manageIssue('${p.id}')">Manage</button>`});
+};
+function manageIssue(id){
+  const p=getPayments().find(x=>x.id===id); const iss=p.issue||{status:'Open',comments:[]};
+  modal('Manage Issue — '+id,
+    `<div class="kv"><div>Supplier</div><div>${esc(p.supplierName)}</div><div>Amount</div><div>SAR ${money(p.amount)}</div><div>Reason</div><div>${esc(iss.reason||'-')}</div></div>
+     <div class="field" style="margin-top:12px"><label>Issue Status</label><select id="miStatus">${ISSUE_STATUSES.map(s=>`<option ${s===iss.status?'selected':''}>${s}</option>`).join('')}</select></div>
+     <div class="field"><label>Add Comment</label><textarea id="miComment"></textarea></div>
+     <div class="section-title">Comments</div>
+     <div class="tbl-wrap" style="max-height:160px"><table><thead><tr><th>When</th><th>User</th><th>Comment</th></tr></thead><tbody>
+       ${(iss.comments||[]).map(c=>`<tr><td>${fmtDateTime(c.ts)}</td><td>${esc(c.u)}</td><td>${esc(c.t)}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">No comments</td></tr>'}
+     </tbody></table></div>`,
+    `<button class="btn" onclick="closeModal()">Close</button>
+     <button class="btn" onclick="reuploadIssue('${id}')">Re-upload to Bank</button>
+     <button class="btn primary" onclick="saveIssueUpdate('${id}')">Save</button>`);
+}
+function saveIssueUpdate(id){
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  p.issue=p.issue||{comments:[]};
+  p.issue.status=document.getElementById('miStatus').value;
+  const c=document.getElementById('miComment').value.trim();
+  if(c){p.issue.comments=p.issue.comments||[];p.issue.comments.unshift({u:SESSION.email,t:c,ts:now()});}
+  if(p.issue.status==='Resolved'){const o=p.status;}
+  p.modBy=SESSION.email;p.mod=now();
+  savePayments(pays); logAudit('Issue Updated',id+': '+p.issue.status); closeModal(); toast('Issue updated','ok'); navigate('issues');
+}
+function reuploadIssue(id){
+  const pays=getPayments(); const p=pays.find(x=>x.id===id);
+  const o=p.status; p.status='Uploaded to Bank - Pending Bank Approval Cycle';
+  p.issue.status='Re-uploaded to Bank'; p.uploadDate=now(); p.uploadedBy=SESSION.email;
+  p.history.unshift({u:SESSION.email,d:now(),from:o,to:p.status,c:'Re-uploaded after issue'});
+  p.modBy=SESSION.email;p.mod=now();
+  savePayments(pays); logAudit('Issue Re-upload',id); closeModal(); buildSidebar(); toast('Re-uploaded to bank','ok'); navigate('issues');
+}
+
+/* ---------- PAYMENT HISTORY ---------- */
+RENDER.history=function(){
+  let pays=getPayments();
+  if(SESSION.role==='AP User')pays=pays.filter(p=>p.createdBy===SESSION.email);
+  const events=[];
+  pays.forEach(p=>(p.history||[]).forEach(h=>events.push({
+    id:p.id,supplierName:p.supplierName,amount:p.amount,from:h.from,to:h.to,user:h.u,when:h.d,comment:h.c
+  })));
+  events.sort((a,b)=>new Date(b.when)-new Date(a.when));
+  let html=pageHead('Payment History','Full chronological status trail across all payments.');
+  const cols=[['When','when'],['Payment ID','id'],['Supplier Name','supplierName'],['Amount','amount'],['From','from'],['To','to'],['User','user'],['Comment','comment']];
+  html+=tableBlock('hisTbl',cols,events,{money:['amount']});
+  document.getElementById('content').innerHTML=html;
+  // override date format for 'when'
+  wireTable('hisTbl',cols,events.map(e=>({...e,when:fmtDateTime(e.when)})),{money:['amount']});
+};
+
+/* ---------- EMAIL GENERATOR ---------- */
+RENDER.email=function(){
+  let html=pageHead('Email Generator','Generate standardized Najm approval emails from selected payments.');
+  html+=`<div class="card pad">
+    <div class="pillrow">
+      <span class="pill active" id="emT0" onclick="emailType(0)">CFO (&lt; 1M)</span>
+      <span class="pill" id="emT1" onclick="emailType(1)">COO (DA)</span>
+      <span class="pill" id="emT2" onclick="emailType(2)">CFO (&ge; 1M)</span>
+      <span class="pill" id="emT3" onclick="emailType(3)">CEO (&ge; 1M)</span>
+      <span class="pill" id="emT4" onclick="emailType(4)">Payment Issues</span>
+    </div>
+    <p class="muted" id="emHint">Each tab lists only the payments currently awaiting that executive. Select payments, then generate the email.</p>
+    <div id="emTableWrap"></div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn primary" onclick="generateEmail()">Generate Email</button>
+    </div>
+  </div>
+  <div id="emailOut" style="margin-top:18px"></div>`;
+  document.getElementById('content').innerHTML=html;
+  const t=(window._pendingEmailTab!=null)?window._pendingEmailTab:0; window._pendingEmailTab=null;
+  emailType(t);
+};
+function emailType(t){window._emType=t;document.querySelectorAll('[id^=emT]').forEach((e,i)=>e.classList.toggle('active',i===t));renderEmailPicker();}
+function emailPool(){
+  const t=window._emType; const pays=getPayments(); const s=getSettings();
+  if(t===0)return pays.filter(p=>p.ptype!=='NRN'&&p.ptype!=='DA'&&!["Approved","Cancelled"].includes(p.status));
+  if(t===1)return pays.filter(p=>p.ptype==='NRN'||p.ptype==='DA'||p.category==='NRN Payments'||p.category==='DA Payments');
+  if(t===2)return pays.filter(p=>Number(p.amount)>=Number(s.threshold||1000000));
+  if(t===3)return pays.filter(p=>p.issue||p.status.includes('Rejected'));
+}
+function renderEmailPicker(){
+  const data=emailPool();
+  const cols=[['Payment ID','id'],['Beneficiary','supplierName'],['Amount','amount'],['Category','category'],['Ref','refNo'],['Status','status']];
+  document.getElementById('emTableWrap').innerHTML=`<div class="tbl-wrap"><table id="emTbl"></table></div>`;
+  wireTable('emTbl',cols,data,{money:['amount'],badge:['status'],checkbox:true});
+}
+function generateEmail(){
+  const sel=tblSelected('emTbl');
+  let pays=emailPool().filter(p=>sel.includes(p.id));
+  if(!pays.length){toast('Select at least one payment','warn');return;}
+  const s=getSettings(); const t=window._emType; const apr=s.approvers||{};
+  const approver = t===0?(apr.CFO||'Chief Financial Officer')
+                 : t===1?(apr.COO||'Chief Operating Officer')
+                 : t===2?(apr.CFO||'Chief Financial Officer')
+                 : t===3?(apr.CEO||'Chief Executive Officer')
+                 : 'Treasury Manager';
+  const grand=pays.reduce((a,p)=>a+Number(p.amount),0);
+  const today=new Date().toLocaleDateString('en-GB');
+  // group by category
+  const groups={}; pays.forEach(p=>{(groups[p.category]=groups[p.category]||[]).push(p)});
+  let tablesHtml='', tablesText='';
+  for(const cat in groups){
+    const arr=groups[cat]; const isSadad=cat==='SADAD Payments'; const ctot=arr.reduce((a,p)=>a+Number(p.amount),0);
+    if(isSadad){
+      tablesHtml+=`<h4 style="color:var(--primary);margin:16px 0 4px">${esc(cat)}</h4>
+      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%"><thead><tr>
+      <th>No</th><th>Bill Name</th><th>Bill Ref</th><th style="text-align:right">Payment Amount in SAR</th><th>Ref Number</th></tr></thead><tbody>`+
+      arr.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.supplierName)}</td><td>${esc(p.shortDesc||p.origRef)}</td><td style="text-align:right">${money(p.amount)}</td><td>${esc(p.refNo)}</td></tr>`).join('')+
+      `</tbody></table><div class="cat-total">Total ${esc(cat)}: SAR ${money(ctot)}</div>`;
+    }else{
+      tablesHtml+=`<h4 style="color:var(--primary);margin:16px 0 4px">${esc(cat)}</h4>
+      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%"><thead><tr>
+      <th>No</th><th>Beneficiary Name</th><th style="text-align:right">Payment Amount in SAR</th><th>Ref Number</th><th>Short Description</th></tr></thead><tbody>`+
+      arr.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.supplierName)}</td><td style="text-align:right">${money(p.amount)}</td><td>${esc(p.refNo)}</td><td>${esc(p.shortDesc)}</td></tr>`).join('')+
+      `</tbody></table><div class="cat-total">Total ${esc(cat)}: SAR ${money(ctot)}</div>`;
+    }
+    tablesText+=`\n${cat}\n`+arr.map((p,i)=>`${i+1}. ${p.supplierName} | SAR ${money(p.amount)} | ${p.refNo} | ${p.shortDesc||p.origRef}`).join('\n')+`\nTotal ${cat}: SAR ${money(ctot)}\n`;
+  }
+  const routeText=(t===0?'AP Manager → Treasury Manager → CFO'
+                 : t===1?'AP Manager → Treasury Manager → COO (Delegation of Authority)'
+                 : t===2?'AP Manager → Treasury Manager → CFO (above SAR 1M)'
+                 : t===3?'AP Manager → Treasury Manager → CFO → CEO (above SAR 1M)'
+                 : 'Treasury Manager');
+  const subject=`Payment Approval Request – ${today} – SAR ${money(grand)}`;
+  const sig=(s.signature||'Ibrahim K. Alluhaydi\nTreasury and Investment Manager');
+  const bodyHtml=`<div class="email-preview" id="emailBody">
+    <h2>Najm — Payment Approval Request</h2>
+    <p><b>Subject:</b> ${esc(subject)}</p>
+    <p>Dear ${esc(approver)},</p>
+    <p>The following payments are currently pending approval in the bank.</p>
+    ${tablesHtml}
+    <div class="grand">Grand Total: SAR ${money(grand)}</div>
+    <p style="margin-top:14px"><b>Approval Route:</b> ${esc(routeText)}</p>
+    <p>Kindly review and approve the above payments to avoid any delay in processing.</p>
+    <p>Regards,</p>
+    <p style="white-space:pre-line">${esc(sig)}</p>
+  </div>`;
+  const plain=`Subject: ${subject}\n\nDear ${approver},\n\nThe following payments are currently pending approval in the bank.\n${tablesText}\nGrand Total: SAR ${money(grand)}\n\nApproval Route: ${routeText}\n\nKindly review and approve the above payments to avoid any delay in processing.\n\nRegards,\n${sig}`;
+  window._emailPlain=plain; window._emailSubject=subject;
+  document.getElementById('emailOut').innerHTML=`<div class="card pad">
+    <div class="actions" style="margin-bottom:14px">
+      <button class="btn primary" onclick="copyEmail()">⧉ Copy to Outlook</button>
+      <button class="btn" onclick="exportEmailHtml()">⬇ Export HTML</button>
+      <button class="btn" onclick="printEmail()">🖨 Print / Save PDF</button>
+    </div>${bodyHtml}</div>`;
+  // save history
+  const emails=DB.get('emails',[]); emails.unshift({id:uid('E'),type:['CFO (<1M)','COO (DA)','CFO (>=1M)','CEO (>=1M)','Issues'][t],subject,count:pays.length,total:grand,by:SESSION.email,ts:now()});
+  DB.set('emails',emails); logAudit('Email Generated',subject);
+  toast('Email generated','ok');
+}
+function copyEmail(){navigator.clipboard.writeText(window._emailPlain).then(()=>toast('Email copied — paste into Outlook','ok'));}
+function exportEmailHtml(){
+  const html='<html><head><meta charset="utf-8"><title>'+esc(window._emailSubject)+'</title></head><body>'+document.getElementById('emailBody').innerHTML+'</body></html>';
+  const blob=new Blob([html],{type:'text/html'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='Najm_Approval_Email.html'; a.click(); toast('HTML exported','ok');
+}
+function printEmail(){
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>Najm Approval Email</title></head><body>'+document.getElementById('emailBody').outerHTML+'</body></html>');
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
+}
+
+/* ---------- REPORTS & ANALYTICS ---------- */
+RENDER.reports=function(){
+  const pays=getPayments(); const s=getSettings();
+  const sum=arr=>arr.reduce((a,p)=>a+Number(p.amount||0),0);
+  const high=pays.filter(p=>Number(p.amount)>=Number(s.threshold||1000000));
+  let html=pageHead('Reports & Analytics','Executive insights across the payment lifecycle.',
+    `<button class="btn" onclick="exportReport()">⬇ Export Summary CSV</button>`);
+  html+=`<div class="cards">
+    ${statCard('Total Uploaded',pays.length,'SAR '+money(sum(pays)))}
+    ${statCard('Pending',pays.filter(p=>p.status==='Pending').length,'SAR '+money(sum(pays.filter(p=>p.status==='Pending'))))}
+    ${statCard('Uploaded to Bank',pays.filter(p=>p.status.includes('Uploaded')).length,'SAR '+money(sum(pays.filter(p=>p.status.includes('Uploaded')))))}
+    ${statCard('Rejected',pays.filter(p=>p.status.includes('Rejected')).length,'SAR '+money(sum(pays.filter(p=>p.status.includes('Rejected')))))}
+    ${statCard('Highest Payment','SAR '+money(Math.max(0,...pays.map(p=>Number(p.amount)))),'',true)}
+    ${statCard('Duplicate Warnings',pays.filter(p=>p.dupOverride).length,'')}
+    ${statCard('Above SAR 1M',high.length,'SAR '+money(sum(high)))}
+    ${statCard('Need COO Approval',pays.filter(p=>p.ptype==='NRN'||p.ptype==='DA').length,'')}
+  </div>`;
+  // report selector
+  html+=`<div class="pillrow">
+    <span class="pill active" id="rg0" onclick="reportGroup(0)">AP Reports</span>
+    <span class="pill" id="rg1" onclick="reportGroup(1)">Treasury Reports</span>
+    <span class="pill" id="rg2" onclick="reportGroup(2)">Control Reports</span>
+  </div>
+  <div class="field" style="max-width:420px"><label>Choose Report</label><select id="repSel" onchange="runReport()"></select></div>
+  <div id="repOut"></div>`;
+  html+=`<div class="chart-grid" style="margin-top:18px">
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Payment Value Over Time</h4><canvas id="rLine" height="220"></canvas></div>
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Payments by Category</h4><canvas id="rCat" height="220"></canvas></div>
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Payments by Bank</h4><canvas id="rBank" height="220"></canvas></div>
+    <div class="chart-wrap"><h4 style="margin-bottom:10px">Payments by Status</h4><canvas id="rStatus" height="220"></canvas></div>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+  window._repGroup=0; fillReportSelect(); runReport();
+  // charts
+  drawLine('rLine',valueOverTime(pays));
+  drawBars('rCat',CATEGORIES.map(c=>({label:c.replace(' Payments',''),value:sum(pays.filter(p=>p.category===c))})));
+  drawBars('rBank',BANKS.map(b=>({label:b,value:pays.filter(p=>p.bank===b).length})));
+  drawPie('rStatus',STATUSES.map(st=>({label:st.split(' ')[0],value:pays.filter(p=>p.status===st).length})).filter(x=>x.value));
+};
+const REPORTS={
+  0:[ /* AP */
+    "Payments by AP User","Payments by Supplier","Payments by Company Code","Payments by Type","Payments by Status",
+    "Top 10 Suppliers by Amount","Duplicate Risk Report","Missing Required Fields","Manual Edits","Batch Upload Report","Returned Payments"
+  ],
+  1:[ /* Treasury */
+    "Payments by Bank","Payments by Approval Status","Payments Above SAR 1M","NRN/DA Requiring COO","Bank Rejected Payments",
+    "Approval Aging","Pending Approval by Approver","CFO Pending","CEO Pending","Bank Upload Success Rate"
+  ],
+  2:[ /* Control */
+    "Duplicate Payment Alerts","High Value Payments","Modified After Upload","Duplicate Override Cases","Missing Original Reference",
+    "Missing Supplier Name","Negative Amounts","Pending More Than 3 Days","Login History","Failed Login Attempts","Full Audit Trail"
+  ]
+};
+function reportGroup(g){window._repGroup=g;document.querySelectorAll('[id^=rg]').forEach((e,i)=>e.classList.toggle('active',i===g));fillReportSelect();runReport();}
+function fillReportSelect(){document.getElementById('repSel').innerHTML=REPORTS[window._repGroup].map(r=>`<option>${r}</option>`).join('');}
+function runReport(){
+  const name=document.getElementById('repSel').value;
+  const {cols,rows}=buildReport(name);
+  window._repCols=cols; window._repRows=rows; window._repName=name;
+  let h=`<div class="card pad"><div class="toolbar"><b>${esc(name)}</b><span style="flex:1"></span>
+    <button class="btn sm" onclick="copyTable(window._repCols,window._repRows)">⧉ Copy</button>
+    <button class="btn sm" onclick="exportCSV(window._repCols,window._repRows,window._repName)">⬇ CSV</button></div>
+    <div class="tbl-wrap"><table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
+  if(!rows.length)h+=`<tr><td colspan="${cols.length}" class="empty">No data</td></tr>`;
+  rows.forEach(r=>{h+='<tr>'+r.map((c,i)=>`<td class="${i>0&&/amount|total|value/i.test(cols[i])?'right mono':''}">${esc(c)}</td>`).join('')+'</tr>';});
+  h+=`</tbody></table></div><div class="muted" style="margin-top:8px;font-size:11.5px">${rows.length} row(s)</div></div>`;
+  document.getElementById('repOut').innerHTML=h;
+}
+function buildReport(name){
+  const pays=getPayments(); const s=getSettings(); const users=getUsers(); const audit=getAudit();
+  const groupBy=(arr,key,label)=>{const m={};arr.forEach(p=>{const k=typeof key==='function'?key(p):p[key];m[k]=m[k]||{c:0,a:0};m[k].c++;m[k].a+=Number(p.amount||0);});
+    return {cols:[label,'Count','Total Amount'],rows:Object.entries(m).map(([k,v])=>[k||'(none)',v.c,money(v.a)])};};
+  switch(name){
+    case "Payments by AP User":return groupBy(pays,'createdBy','AP User');
+    case "Payments by Supplier":return groupBy(pays,'supplierName','Supplier');
+    case "Payments by Company Code":return groupBy(pays,'company','Company Code');
+    case "Payments by Type":return groupBy(pays,'ptype','Type');
+    case "Payments by Status":return groupBy(pays,'status','Status');
+    case "Payments by Bank":return groupBy(pays,'bank','Bank');
+    case "Payments by Approval Status":return groupBy(pays,p=>bankApprovalStatus(p),'Approval Status');
+    case "Top 10 Suppliers by Amount":{const g=groupBy(pays,'supplierName','Supplier');g.rows.sort((a,b)=>parseFloat(b[2].replace(/,/g,''))-parseFloat(a[2].replace(/,/g,'')));g.rows=g.rows.slice(0,10);return g;}
+    case "Duplicate Risk Report":case "Duplicate Payment Alerts":case "Duplicate Override Cases":
+      return {cols:['Payment ID','Supplier Name','Amount','Risk','Original Ref','Created By'],rows:pays.filter(p=>p.dupOverride).map(p=>[p.id,p.supplierName,money(p.amount),p.dupRisk||'-',p.origRef,p.createdBy])};
+    case "Missing Required Fields":return {cols:['Payment ID','Supplier Name','Missing'],rows:pays.filter(p=>!p.supplierName||!p.origRef||!p.amount).map(p=>[p.id,p.supplierName,[!p.supplierName&&'Supplier Name',!p.origRef&&'Original Ref',!p.amount&&'Amount'].filter(Boolean).join(', ')])};
+    case "Missing Original Reference":return {cols:['Payment ID','Supplier Name','Amount'],rows:pays.filter(p=>!p.origRef).map(p=>[p.id,p.supplierName,money(p.amount)])};
+    case "Missing Supplier Name":return {cols:['Payment ID','Supplier','Amount'],rows:pays.filter(p=>!p.supplierName).map(p=>[p.id,p.supplier,money(p.amount)])};
+    case "Negative Amounts":return {cols:['Payment ID','Supplier Name','Amount'],rows:pays.filter(p=>Number(p.amount)<0).map(p=>[p.id,p.supplierName,money(p.amount)])};
+    case "Manual Edits":case "Modified After Upload":return {cols:['Payment ID','Supplier Name','Created By','Modified By','Modified'],rows:pays.filter(p=>p.modBy!==p.createdBy).map(p=>[p.id,p.supplierName,p.createdBy,p.modBy,fmtDateTime(p.mod)])};
+    case "Batch Upload Report":{const m={};pays.forEach(p=>{m[p.batch]=m[p.batch]||{c:0,a:0,by:p.createdBy};m[p.batch].c++;m[p.batch].a+=Number(p.amount);});return {cols:['Batch ID','Payments','Total Amount','Created By'],rows:Object.entries(m).map(([k,v])=>[k,v.c,money(v.a),v.by])};}
+    case "Returned Payments":case "Bank Rejected Payments":return {cols:['Payment ID','Supplier Name','Amount','Reason'],rows:pays.filter(p=>p.status.includes('Rejected')).map(p=>[p.id,p.supplierName,money(p.amount),p.issue?p.issue.reason:'-'])};
+    case "Payments Above SAR 1M":case "High Value Payments":return {cols:['Payment ID','Supplier Name','Amount','Type','Status'],rows:pays.filter(p=>Number(p.amount)>=Number(s.threshold||1000000)).map(p=>[p.id,p.supplierName,money(p.amount),p.ptype,p.status])};
+    case "NRN/DA Requiring COO":return {cols:['Payment ID','Supplier Name','Amount','Type'],rows:pays.filter(p=>p.ptype==='NRN'||p.ptype==='DA').map(p=>[p.id,p.supplierName,money(p.amount),p.ptype])};
+    case "Approval Aging":return {cols:['Payment ID','Supplier Name','Amount','Status','Days Since Modified'],rows:pays.filter(p=>!['Approved','Cancelled'].includes(p.status)).map(p=>[p.id,p.supplierName,money(p.amount),p.status,Math.floor((Date.now()-new Date(p.mod))/86400000)])};
+    case "Pending Approval by Approver":{const m={};pays.filter(p=>!['Approved','Cancelled'].includes(p.status)).forEach(p=>{const k=bankApprovalStatus(p).replace('Pending ','');m[k]=(m[k]||0)+1;});return {cols:['Approver','Pending Count'],rows:Object.entries(m).map(([k,v])=>[k,v])};}
+    case "CFO Pending":return {cols:['Payment ID','Supplier Name','Amount'],rows:pays.filter(p=>bankApprovalStatus(p)==='Pending CFO').map(p=>[p.id,p.supplierName,money(p.amount)])};
+    case "CEO Pending":return {cols:['Payment ID','Supplier Name','Amount'],rows:pays.filter(p=>bankApprovalStatus(p)==='Pending CEO Office').map(p=>[p.id,p.supplierName,money(p.amount)])};
+    case "Bank Upload Success Rate":{const up=pays.filter(p=>p.uploadDate).length;const rej=pays.filter(p=>p.status.includes('Rejected')).length;const rate=up?Math.round((up-rej)/up*100):0;return {cols:['Metric','Value'],rows:[['Uploaded to Bank',up],['Rejected/Returned',rej],['Success Rate',rate+'%']]};}
+    case "Pending More Than 3 Days":return {cols:['Payment ID','Supplier Name','Amount','Days'],rows:pays.filter(p=>p.status!=='Approved'&&(Date.now()-new Date(p.created))/86400000>3).map(p=>[p.id,p.supplierName,money(p.amount),Math.floor((Date.now()-new Date(p.created))/86400000)])};
+    case "Login History":{const rows=[];users.forEach(u=>(u.loginHistory||[]).forEach(h=>rows.push([u.email,h.type,fmtDateTime(h.ts)])));rows.sort((a,b)=>new Date(b[2])-new Date(a[2]));return {cols:['User','Event','When'],rows};}
+    case "Failed Login Attempts":{const rows=[];users.forEach(u=>(u.loginHistory||[]).filter(h=>h.type==='failed').forEach(h=>rows.push([u.email,fmtDateTime(h.ts)])));return {cols:['User','When'],rows};}
+    case "Full Audit Trail":return {cols:['When','User','Role','Action','Detail'],rows:audit.map(a=>[fmtDateTime(a.ts),a.user,a.role,a.action,a.detail])};
+    default:return {cols:['Info'],rows:[['Report not configured']]};
+  }
+}
+function valueOverTime(pays){
+  const m={};pays.forEach(p=>{const d=new Date(p.created);const k=d.toLocaleDateString('en-GB');m[k]=(m[k]||0)+Number(p.amount||0);});
+  const keys=Object.keys(m).sort((a,b)=>{const pa=a.split('/').reverse().join('');const pb=b.split('/').reverse().join('');return pa<pb?-1:1;});
+  return keys.map(k=>({label:k,value:m[k]}));
+}
+function exportReport(){
+  const pays=getPayments();
+  const cols=['Payment ID','Batch','Supplier','Supplier Name','Amount','Category','Type','Bank','Status','Created By','Created'];
+  const rows=pays.map(p=>[p.id,p.batch,p.supplier,p.supplierName,money(p.amount),p.category,p.ptype,p.bank,p.status,p.createdBy,fmtDateTime(p.created)]);
+  exportCSV(cols,rows,'Payments Summary');
+}
+
+/* ---------- AUDIT LOG ---------- */
+RENDER.audit=function(){
+  const audit=getAudit();
+  let html=pageHead('Audit Log','Immutable trail of all system actions.');
+  const cols=[['When','ts'],['User','user'],['Role','role'],['Action','action'],['Detail','detail']];
+  html+=tableBlock('audTbl',cols,audit,{});
+  document.getElementById('content').innerHTML=html;
+  wireTable('audTbl',cols,audit.map(a=>({...a,ts:fmtDateTime(a.ts)})),{});
+};
+
+/* ---------- USER APPROVAL CENTER ---------- */
+RENDER.userapproval=function(){
+  const users=getUsers().filter(u=>u.status==="Pending Admin Approval");
+  let html=pageHead('User Approval Center','Review and approve pending registrations.');
+  if(!users.length){html+=`<div class="card pad empty">No pending users.</div>`;document.getElementById('content').innerHTML=html;return;}
+  html+=`<div class="cards">`;
+  users.forEach(u=>{
+    html+=`<div class="stat">
+      <div class="lbl">${esc(u.email)}</div>
+      <div class="val sm">${esc(u.name)}</div>
+      <div class="sub">${esc(u.title)} • ${esc(u.dept)}<br>${esc(u.mobile)}</div>
+      <div class="field" style="margin-top:10px"><label>Assign Role</label>
+        <select id="ar_${u.id}">${ROLES.map(r=>`<option>${r}</option>`).join('')}</select></div>
+      <div class="field"><label>Assign Department</label>
+        <select id="ad_${u.id}">${(getSettings().departments||DEPARTMENTS_DEFAULT).map(d=>`<option ${d===u.dept?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="actions">
+        <button class="btn sm secondary" onclick="approveUser('${u.id}')">Approve</button>
+        <button class="btn sm danger" onclick="rejectUser('${u.id}')">Reject</button>
+      </div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+};
+function approveUser(id){
+  const users=getUsers(); const u=users.find(x=>x.id===id);
+  u.role=document.getElementById('ar_'+id).value; u.dept=document.getElementById('ad_'+id).value;
+  u.status='Active'; saveUsers(users);
+  logAudit('User Approved',u.email+' as '+u.role); buildSidebar();
+  toast('User approved','ok'); navigate('userapproval');
+}
+function rejectUser(id){
+  const users=getUsers(); const u=users.find(x=>x.id===id);
+  u.status='Rejected'; saveUsers(users);
+  logAudit('User Rejected',u.email); buildSidebar(); toast('User rejected','ok'); navigate('userapproval');
+}
+
+/* ---------- USER MANAGEMENT ---------- */
+RENDER.users=function(){
+  const users=getUsers();
+  let html=pageHead('User Management','Manage all users, roles, and access.');
+  const data=users.map(u=>({...u,logins:(u.loginHistory||[]).filter(h=>h.type==='login').length}));
+  const cols=[['Name','name'],['Email','email'],['Role','role'],['Department','dept'],['Status','status'],['Locked','locked'],['Logins','logins']];
+  html+=tableBlock('usrTbl',cols,data,{actionsHeader:true});
+  document.getElementById('content').innerHTML=html;
+  wireTable('usrTbl',cols,data,{actionsHeader:true,rowActions:u=>`<button class="btn sm" onclick="manageUser('${u.id}')">Manage</button>`});
+};
+function manageUser(id){
+  const u=getUsers().find(x=>x.id===id);
+  modal('Manage User — '+u.name,
+    `<div class="grid2">
+      <div class="field"><label>Role</label><select id="muRole">${ROLES.map(r=>`<option ${r===u.role?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="field"><label>Department</label><select id="muDept">${(getSettings().departments||DEPARTMENTS_DEFAULT).map(d=>`<option ${d===u.dept?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="field"><label>Status</label><select id="muStatus">${["Active","Pending Admin Approval","Rejected","Inactive"].map(s=>`<option ${s===u.status?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field"><label>Locked</label><select id="muLocked"><option value="false" ${!u.locked?'selected':''}>Unlocked</option><option value="true" ${u.locked?'selected':''}>Locked</option></select></div>
+     </div>
+     <div class="section-title">Login History</div>
+     <div class="tbl-wrap" style="max-height:160px"><table><thead><tr><th>Event</th><th>When</th></tr></thead><tbody>
+       ${(u.loginHistory||[]).slice(0,20).map(h=>`<tr><td>${esc(h.type)}</td><td>${fmtDateTime(h.ts)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">No history</td></tr>'}
+     </tbody></table></div>`,
+    `<button class="btn" onclick="closeModal()">Close</button>
+     <button class="btn danger" onclick="resetUserPass('${id}')">Reset Password</button>
+     <button class="btn primary" onclick="saveUser('${id}')">Save</button>`);
+}
+function saveUser(id){
+  const users=getUsers(); const u=users.find(x=>x.id===id);
+  u.role=muRole.value;u.dept=muDept.value;u.status=muStatus.value;
+  u.locked=muLocked.value==='true'; if(!u.locked)u.failed=0;
+  saveUsers(users); logAudit('User Updated',u.email); closeModal(); buildSidebar(); toast('User updated','ok'); navigate('users');
+}
+function resetUserPass(id){
+  const users=getUsers(); const u=users.find(x=>x.id===id);
+  const np='Najm@'+Math.floor(1000+Math.random()*9000);
+  u.pass=np; saveUsers(users); logAudit('Password Reset',u.email);
+  toast('New password: '+np,'ok');
+}
+
+/* ---------- PROFILE ---------- */
+RENDER.profile=function(){
+  const u=SESSION;
+  let html=pageHead('My Profile','Update your personal information.');
+  html+=`<div class="card pad" style="max-width:640px">
+    <div style="display:flex;gap:18px;align-items:center;margin-bottom:18px">
+      <div class="avatar" style="width:72px;height:72px;font-size:26px" id="pfAvatar">${u.photo?`<img src="${u.photo}">`:esc(u.name.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>
+      <div><input type="file" id="pfPhoto" accept="image/*" onchange="previewPhoto()"><p class="muted" style="font-size:11px;margin:6px 0 0">Profile photo</p></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Full Name</label><input id="pfName" value="${esc(u.name)}"></div>
+      <div class="field"><label>Email (locked)</label><input value="${esc(u.email)}" disabled></div>
+      <div class="field"><label>Mobile Number</label><input id="pfMobile" value="${esc(u.mobile)}"></div>
+      <div class="field"><label>Department</label><select id="pfDept">${(getSettings().departments||DEPARTMENTS_DEFAULT).map(d=>`<option ${d===u.dept?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="field"><label>Job Title</label><input id="pfTitle" value="${esc(u.title)}"></div>
+      <div class="field"><label>Role (locked)</label><input value="${esc(u.role)}" disabled></div>
+    </div>
+    <div class="section-title">Change Password</div>
+    <div class="grid2">
+      <div class="field"><label>New Password</label><input type="password" id="pfPass" placeholder="Leave blank to keep"></div>
+      <div class="field"><label>Confirm</label><input type="password" id="pfPass2"></div>
+    </div>
+    <button class="btn primary" onclick="saveProfile()">Save Profile</button>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+  window._pfPhoto=u.photo||'';
+};
+function previewPhoto(){
+  const f=document.getElementById('pfPhoto').files[0]; if(!f)return;
+  const r=new FileReader();r.onload=e=>{window._pfPhoto=e.target.result;document.getElementById('pfAvatar').innerHTML=`<img src="${e.target.result}">`;};r.readAsDataURL(f);
+}
+function saveProfile(){
+  const users=getUsers(); const u=users.find(x=>x.id===SESSION.id);
+  u.name=pfName.value.trim();u.mobile=pfMobile.value.trim();u.dept=pfDept.value;u.title=pfTitle.value.trim();u.photo=window._pfPhoto;
+  const p=pfPass.value, p2=pfPass2.value;
+  if(p){if(!validPassword(p)){toast('Weak password','err');return;}if(p!==p2){toast('Passwords do not match','err');return;}u.pass=p;}
+  saveUsers(users); SESSION=u; logAudit('Profile Updated',u.email);
+  document.getElementById('topName').textContent=u.name;
+  const av=document.getElementById('topAvatar');av.innerHTML=u.photo?`<img src="${u.photo}">`:u.name.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+  toast('Profile saved','ok');
+};
+
+/* ---------- SETTINGS ---------- */
+RENDER.settings=function(){
+  const s=getSettings();
+  let html=pageHead('Settings','Configure system master data and rules.');
+  html+=`<div class="card pad" style="max-width:760px">
+    <div class="grid2">
+      <div class="field"><label>Approval Threshold (SAR)</label><input id="stThresh" type="number" value="${s.threshold}"></div>
+      <div class="field"><label>Email Signature</label><textarea id="stSig">${esc(s.signature)}</textarea></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Departments (comma separated)</label><textarea id="stDept">${esc((s.departments||[]).join(', '))}</textarea></div>
+      <div class="field"><label>Banks (comma separated)</label><textarea id="stBanks">${esc((s.banks||[]).join(', '))}</textarea></div>
+      <div class="field"><label>Payment Categories</label><textarea id="stCats">${esc((s.categories||[]).join(', '))}</textarea></div>
+      <div class="field"><label>Payment Types</label><textarea id="stTypes">${esc((s.types||[]).join(', '))}</textarea></div>
+    </div>
+    <div class="section-title">Approval Cycle — In-System Approvers</div>
+    <p class="muted" style="font-size:12px;margin:-4px 0 10px">Choose which active users can physically approve inside the system. AP Manager and Treasury Manager roles can always approve their step; add extra people here. Executives (CFO / COO / CEO) approve by email and are recorded in the Executive Approval page.</p>
+    <div class="grid2">
+      <div class="field"><label>AP Approvers (hold Ctrl/Cmd to multi-select)</label>
+        <select id="apApprovers" multiple size="6">${activeUserOpts(s.apApprovers||[])}</select></div>
+      <div class="field"><label>Treasury Approvers (hold Ctrl/Cmd to multi-select)</label>
+        <select id="trApprovers" multiple size="6">${activeUserOpts(s.trApprovers||[])}</select></div>
+    </div>
+    <div class="section-title">Executive Names (used in generated emails)</div>
+    <div class="grid2">
+      <div class="field"><label>Head of Revenue & Cash Management</label><input id="apHead" value="${esc((s.approvers||{})['Head of Revenue & Cash Management']||'')}"></div>
+      <div class="field"><label>COO</label><input id="apCOO" value="${esc((s.approvers||{}).COO||'')}"></div>
+      <div class="field"><label>CFO</label><input id="apCFO" value="${esc((s.approvers||{}).CFO||'')}"></div>
+      <div class="field"><label>CEO</label><input id="apCEO" value="${esc((s.approvers||{}).CEO||'')}"></div>
+    </div>
+    <button class="btn primary" onclick="saveSettings()">Save Settings</button>
+    <button class="btn danger" onclick="resetData()" style="margin-left:8px">Reset All Data</button>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+};
+function activeUserOpts(selected){
+  selected=selected||[];
+  return getUsers().filter(u=>u.status==='Active').map(u=>
+    `<option value="${esc(u.email)}" ${selected.includes(u.email)?'selected':''}>${esc(u.name)} — ${esc(u.role)} (${esc(u.email)})</option>`
+  ).join('');
+}
+function selectedValues(id){const el=document.getElementById(id);if(!el)return [];return Array.from(el.selectedOptions).map(o=>o.value);}
+function saveSettings(){
+  const s=getSettings();
+  s.threshold=parseFloat(document.getElementById('stThresh').value)||1000000;
+  s.signature=document.getElementById('stSig').value;
+  const split=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
+  s.departments=split(stDept.value);s.banks=split(stBanks.value);s.categories=split(stCats.value);s.types=split(stTypes.value);
+  s.apApprovers=selectedValues('apApprovers');
+  s.trApprovers=selectedValues('trApprovers');
+  s.approvers={'Head of Revenue & Cash Management':apHead.value,COO:apCOO.value,CFO:apCFO.value,CEO:apCEO.value};
+  DB.set('settings',s); logAudit('Settings Updated'); buildSidebar(); toast('Settings saved','ok');
+}
+function resetData(){
+  modal('Reset All Data','<div class="msg err">This will erase all users, payments, and history. This cannot be undone.</div>',
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="(function(){localStorage.clear();location.reload();})()">Erase Everything</button>`);
+}
+
+/* ---------- ABOUT ---------- */
+RENDER.about=function(){
+  let html=pageHead('About Project','Najm AP & Treasury Payment Control Center');
+  html+=`<div class="card pad" style="max-width:820px">
+    <p style="font-size:15px;line-height:1.7">Najm AP &amp; Treasury Payment Control Center is designed to unify AP and Treasury operations in one platform, eliminate duplicate work, strengthen payment controls, automate approval workflows, improve visibility, and provide management with real-time insights.</p>
+    <div class="section-title">Key Capabilities</div>
+    <ul style="line-height:1.9;color:var(--muted)">
+      <li>End-to-end payment lifecycle from AP upload to bank approval</li>
+      <li>Duplicate payment detection (High / Medium / Low risk)</li>
+      <li>Role-based approval routing with thresholds</li>
+      <li>Standardized approval email generation</li>
+      <li>Full audit trail and executive analytics</li>
+    </ul>
+    <div class="section-title">Project Owners</div>
+    <div class="cols" style="display:flex;gap:40px;flex-wrap:wrap">
+      <div><b>Abdullah M. Al Muqrin</b><br><span class="muted">Acting AP Manager</span></div>
+      <div><b>Ibrahim K. Alluhaydi</b><br><span class="muted">Treasury and Investment Manager</span></div>
+    </div>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+};
+
+/* ============================================================
+   CHARTS (lightweight canvas)
+============================================================ */
+const PALETTE=['#006C5B','#00B050','#1f6feb','#b9770e','#c0392b','#16a085','#8e44ad','#2c3e50'];
+function ctxSetup(id){const c=document.getElementById(id);if(!c)return null;const r=window.devicePixelRatio||1;const w=c.clientWidth||c.parentElement.clientWidth-32;c.width=w*r;c.height=c.height*r;const ctx=c.getContext('2d');ctx.scale(r,r);return {c,ctx,w,h:c.height/r};}
+function drawBars(id,data){const o=ctxSetup(id);if(!o)return;const {ctx,w,h}=o;const max=Math.max(1,...data.map(d=>d.value));const pad=30,bw=(w-pad*2)/data.length*0.6,gap=(w-pad*2)/data.length;ctx.clearRect(0,0,w,h);ctx.font='10px Segoe UI';data.forEach((d,i)=>{const x=pad+gap*i+gap*0.2;const bh=(h-50)*(d.value/max);ctx.fillStyle=PALETTE[i%PALETTE.length];ctx.fillRect(x,h-30-bh,bw,bh);ctx.fillStyle='#5b6b66';ctx.save();ctx.translate(x+bw/2,h-18);ctx.textAlign='center';ctx.fillText(d.label.slice(0,8),0,0);ctx.restore();ctx.fillStyle='#0f2620';ctx.textAlign='center';ctx.fillText(d.value>=1000?Math.round(d.value/1000)+'k':d.value,x+bw/2,h-34-bh);});}
+function drawPie(id,data){const o=ctxSetup(id);if(!o)return;const {ctx,w,h}=o;const total=data.reduce((a,d)=>a+d.value,0)||1;let ang=-Math.PI/2;const cx=w*0.34,cy=h/2,r=Math.min(cx,h/2)-10;ctx.clearRect(0,0,w,h);data.forEach((d,i)=>{const a=d.value/total*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+a);ctx.closePath();ctx.fillStyle=PALETTE[i%PALETTE.length];ctx.fill();ang+=a;});ctx.font='11px Segoe UI';data.forEach((d,i)=>{const y=20+i*18;ctx.fillStyle=PALETTE[i%PALETTE.length];ctx.fillRect(w*0.66,y-9,11,11);ctx.fillStyle='#0f2620';ctx.textAlign='left';ctx.fillText(d.label+' ('+d.value+')',w*0.66+16,y);});}
+function drawLine(id,data){const o=ctxSetup(id);if(!o)return;const {ctx,w,h}=o;ctx.clearRect(0,0,w,h);if(!data.length){ctx.fillStyle='#5b6b66';ctx.fillText('No data',w/2,h/2);return;}const max=Math.max(1,...data.map(d=>d.value));const pad=36;const step=(w-pad*2)/Math.max(1,data.length-1);ctx.strokeStyle='#006C5B';ctx.lineWidth=2;ctx.beginPath();data.forEach((d,i)=>{const x=pad+step*i;const y=h-30-(h-50)*(d.value/max);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();ctx.fillStyle='#00B050';data.forEach((d,i)=>{const x=pad+step*i;const y=h-30-(h-50)*(d.value/max);ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fill();ctx.fillStyle='#5b6b66';ctx.font='9px Segoe UI';ctx.textAlign='center';ctx.fillText(d.label.slice(0,5),x,h-14);ctx.fillStyle='#00B050';});}
+
+/* ============================================================
+   LANG
+============================================================ */
+function toggleLang(){
+  LANG=LANG==='en'?'ar':'en'; DB.set('lang',LANG);
+  document.documentElement.setAttribute('dir',LANG==='ar'?'rtl':'ltr');
+  document.getElementById('langBtn').textContent=LANG==='ar'?'ع / EN':'EN / ع';
+  toast(LANG==='ar'?'تم التبديل إلى العربية':'Switched to English','ok');
+}
+
+/* ============================================================
+   BOOT
+============================================================ */
+(function init(){
+  seed(); fillRegDept();
+  if(LANG==='ar')document.documentElement.setAttribute('dir','rtl');
+  const email=DB.get('session',null);
+  if(email){const u=getUsers().find(x=>x.email===email);if(u&&u.status==='Active'){SESSION=u;enterApp();return;}}
+})();
+</script>
+</body>
+</html>
