@@ -113,9 +113,6 @@ export function buildEmailHtml(payments: Payment[], meta: Meta, variant: EmailVa
     .join("")
 
   return `<div style="font-family:Segoe UI,Arial,sans-serif;color:#1f2d24;line-height:1.5;max-width:820px">
-    <div style="margin-bottom:18px">
-      <img src="${NAJM_LOGO_URL}" alt="Najm" width="120" style="display:block;height:auto;border:0" />
-    </div>
     <p>Dear ${esc(meta.recipient || "Team")},</p>
     <p>${esc(introText(variant, minAmount))}</p>
     ${tables || '<p style="color:#8a8a8a">No payments to show for the selected groups.</p>'}
